@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BRAUNBÄR Storefront</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body { padding:20px; background:#f8f9fa;}
+.card { height:100%; transition:0.3s; }
+.card:hover { transform: translateY(-5px); }
+
+/* Image zoom */
+.img-container { overflow:hidden; }
+.img-container img { transition: transform .4s ease; }
+.img-container:hover img { transform: scale(1.1); }
+
+/* Details toggle */
+.details { display:none; font-size:0.9rem; white-space:pre-line; }
+.show-btn { cursor:pointer; color:#0d6efd; }
+</style>
+</head>
+<body>
+
+<h1 class="mb-4">BRAUNBÄR Storefront</h1>
+
+<div class="row mb-3">
+  <div class="col-md-3">
+    <input id="searchInput" class="form-control" placeholder="Search...">
+  </div>
+  <div class="col-md-3">
+    <select id="brandFilter" class="form-select">
+      <option value="">All Brands</option>
+      <option value="levi">Levi's</option>
+    </select>
+  </div>
+  <div class="col-md-3">
+    <select id="sizeFilter" class="form-select">
+      <option value="">All Sizes</option>
+      <option value="32">32</option>
+      <option value="34">34</option>
+    </select>
+  </div>
+  <div class="col-md-3">
+    <input id="priceFilter" type="number" class="form-control" placeholder="Max Price">
+  </div>
+</div>
+
+<div class="row" id="products">
+
+<!-- PRODUCT 1 -->
+<div class="col-md-4 mb-4 product-card" data-brand="levi" data-size="34" data-price="175">
+<div class="card">
+<div class="img-container">
+<img src="https://i.ebayimg.com/images/g/4xMAAeSwVNVp6FwA/s-l1600.jpg" class="card-img-top">
+</div>
+<div class="card-body">
+<h5>Levi's 501XX Valencia 1995</h5>
+<p><strong>$175</strong></p>
+<p>Waist: 34 | Inseam: 29.5 | Excellent</p>
+<p class="show-btn" onclick="toggleDetails(this)">View Details</p>
+<div class="details">Vintage Levi's 501XX – Valencia St. Factory (1995)
+Collector's piece with 555 factory code.
+Natural indigo fade, train track seams.
+Waist 34", Inseam 29.5"</div>
+</div>
+</div>
+</div>
+
+<!-- PRODUCT 2 -->
+<div class="col-md-4 mb-4 product-card" data-brand="levi" data-size="34" data-price="39.99">
+<div class="card">
+<div class="img-container">
+<img src="https://i.ebayimg.com/images/g/044AAeSwUg1p6VSz/s-l1600.jpg" class="card-img-top">
+</div>
+<div class="card-body">
+<h5>Levi's 501 Medium Wash</h5>
+<p><strong>$39.99</strong></p>
+<p>Waist: 34 | Inseam: 28 | Great</p>
+<p class="show-btn" onclick="toggleDetails(this)">View Details</p>
+<div class="details">Classic 501 fit, button fly, straight leg.
+Medium wash denim, everyday wear.
+Minor fraying, altered inseam.</div>
+</div>
+</div>
+</div>
+
+<!-- PRODUCT 3 -->
+<div class="col-md-4 mb-4 product-card" data-brand="levi" data-size="32" data-price="31.99">
+<div class="card">
+<div class="img-container">
+<img src="https://i.ebayimg.com/images/g/vgoAAeSwNw1p6sMc/s-l1600.jpg" class="card-img-top">
+</div>
+<div class="card-body">
+<h5>Levi's 505 Beige</h5>
+<p><strong>$31.99</strong></p>
+<p>Waist: 32 | Inseam: 29 | Good</p>
+<p class="show-btn" onclick="toggleDetails(this)">View Details</p>
+<div class="details">505 Regular Fit, zip fly.
+Beige/cream color, versatile piece.
+Made in Dominican Republic.</div>
+</div>
+</div>
+</div>
+
+<!-- PRODUCT 4 -->
+<div class="col-md-4 mb-4 product-card" data-brand="levi" data-size="34" data-price="39.99">
+<div class="card">
+<div class="img-container">
+<img src="https://i.ebayimg.com/images/g/nvkAAeSwo41p6qxp/s-l1600.jpg" class="card-img-top">
+</div>
+<div class="card-body">
+<h5>Levi's 505 Faded Black</h5>
+<p><strong>$39.99</strong></p>
+<p>Waist: 34 | Inseam: 29 | Vintage</p>
+<p class="show-btn" onclick="toggleDetails(this)">View Details</p>
+<div class="details">Faded black/charcoal wash.
+Classic straight fit.
+Altered hem, natural fading.</div>
+</div>
+</div>
+</div>
+
+<!-- PRODUCT 5 -->
+<div class="col-md-4 mb-4 product-card" data-brand="levi" data-size="34" data-price="44.99">
+<div class="card">
+<div class="img-container">
+<img src="https://i.ebayimg.com/images/g/zDsAAeSw6SNp6l~d/s-l1600.jpg" class="card-img-top">
+</div>
+<div class="card-body">
+<h5>Levi's 505 Grey USA</h5>
+<p><strong>$44.99</strong></p>
+<p>Waist: 34 | Inseam: 30.5 | Vintage</p>
+<p class="show-btn" onclick="toggleDetails(this)">View Details</p>
+<div class="details">Made in USA, heavyweight denim.
+Faded grey wash, raw hem.
+Classic 505 straight fit.</div>
+</div>
+</div>
+</div>
+
+</div>
+
+<script>
+function toggleDetails(btn){
+ let details = btn.nextElementSibling;
+ details.style.display = details.style.display === "block" ? "none" : "block";
+}
+
+function filterProducts(){
+ let search = document.getElementById("searchInput").value.toLowerCase();
+ let brand = document.getElementById("brandFilter").value;
+ let size = document.getElementById("sizeFilter").value;
+ let price = document.getElementById("priceFilter").value;
+
+ document.querySelectorAll(".product-card").forEach(card=>{
+   let text = card.innerText.toLowerCase();
+   let match = true;
+
+   if(search && !text.includes(search)) match = false;
+   if(brand && card.dataset.brand !== brand) match = false;
+   if(size && card.dataset.size !== size) match = false;
+   if(price && parseFloat(card.dataset.price) > parseFloat(price)) match = false;
+
+   card.style.display = match ? "" : "none";
+ });
+}
+
+document.querySelectorAll("#searchInput, #brandFilter, #sizeFilter, #priceFilter")
+.forEach(el => el.addEventListener("input", filterProducts));
+</script>
+
+</body>
+</html>
