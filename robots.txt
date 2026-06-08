@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https:///sitemap.xml
+Sitemap: https://thebraunbaredit.pages.dev/sitemap.xml
