@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Apparel Edit - THE BRAUNBÄR EDIT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css?family=Raleway:ital,wght@0,300;0,400;0,600;0,800;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS Reset & Variables */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --primary-color: #8A5E39; 
+            --secondary-color: #D9A876; 
+            --accent-color: #f5efe6; 
+            --dark-text: #463f2f; 
+            --light-bg: #FFFFFF;
+            --font-stack: 'Raleway', sans-serif;
+        }
+        body { font-family: var(--font-stack); color: var(--dark-text); background-color: var(--light-bg); }
+        .announcement-bar { background-color: var(--primary-color); color: #ffffff; text-align: center; padding: 12px; font-weight: 600; }
+        .announcement-bar a { color: #ffffff; text-decoration: underline; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 15px 10%; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .logo-text { font-weight: 800; font-size: 1.3rem; color: var(--primary-color); text-decoration: none; }
+        nav a { text-decoration: none; color: var(--dark-text); margin-left: 25px; font-weight: 600; }
+        nav a.active { color: var(--primary-color); }
+
+        .subpage-banner { background-color: var(--accent-color); padding: 40px 10%; }
+        .breadcrumbs { font-size: 0.85rem; color: #8c826e; margin-bottom: 10px; text-transform: uppercase; }
+        .breadcrumbs a { color: var(--primary-color); text-decoration: none; }
+        .subpage-banner h1 { font-size: 2.2rem; color: var(--primary-color); text-transform: uppercase; }
+
+        .section-padding { padding: 60px 10%; }
+        .catalog-explorer { display: grid; grid-template-columns: 260px 1fr; gap: 40px; }
+        
+        .filter-sidebar { background-color: #faf7f2; padding: 25px; border-radius: 10px; border: 1px solid #efeae0; align-self: start; }
+        .filter-search-box { position: relative; margin-bottom: 20px; }
+        .filter-search-box input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #d2c8b8; }
+        .filter-section { margin-bottom: 25px; }
+        .filter-section h3 { font-size: 1rem; color: var(--primary-color); border-bottom: 2px solid #efeae0; padding-bottom: 8px; margin-bottom: 15px; text-transform: uppercase; }
+        .filter-list { list-style: none; }
+        .filter-item { margin-bottom: 8px; display: flex; align-items: center; font-size: 0.9rem; }
+        .filter-item input { margin-right: 8px; }
+
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 25px; }
+        .product-card { background: white; border: 1px solid rgba(0,0,0,0.06); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+        .product-card-img { height: 220px; background-color: #faf7f2; position: relative; }
+        .product-card-img img { width: 100%; height: 100%; object-fit: cover; }
+        .product-card-details { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
+        .product-brand { font-size: 0.75rem; color: var(--secondary-color); font-weight: 700; text-transform: uppercase; }
+        .product-name { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+        .product-bottom { margin-top: auto; border-top: 1px solid #f5efe6; padding-top: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .product-price { font-weight: 800; font-size: 1.2rem; color: var(--primary-color); }
+        .btn-sm { background-color: var(--primary-color); color: white; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; text-decoration: none; font-weight: 700; }
+
+        footer { background-color: var(--dark-text); color: #ffffff; padding: 40px 10%; text-align: center; }
+        @media (max-width: 768px) {
+            .catalog-explorer { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="announcement-bar">
+        Buy Apparel or <a href="https://www.ebay.com/str/thebraunbaredit" target="_blank">Visit our eBay Store</a>
+    </div>
+
+    <header>
+        <a href="index.html" class="logo-text">THE BRAUNBÄR EDIT</a>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="categories.html" class="active">Categories</a>
+        </nav>
+    </header>
+
+    <div class="subpage-banner">
+        <div class="breadcrumbs">
+            <a href="categories.html">Categories</a><span>/</span><span>Apparel</span>
+        </div>
+        <h1>The Apparel Edit</h1>
+        <p>Premium casual layers and signature denims packaged in eco-friendly paper bags.</p>
+    </div>
+
+    <section class="section-padding">
+        <div class="catalog-explorer">
+            <aside class="filter-sidebar">
+                <div class="filter-search-box">
+                    <input type="text" id="search-input" placeholder="Search..." oninput="filterGrid()">
+                </div>
+                <div class="filter-section">
+                    <h3>Filter Brand</h3>
+                    <ul class="filter-list">
+                        <li class="filter-item"><input type="checkbox" id="brand-levis" value="Levi's" onchange="filterGrid()"><label for="brand-levis"> Levi's</label></li>
+                        <li class="filter-item"><input type="checkbox" id="brand-eddie" value="Eddie Bauer" onchange="filterGrid()"><label for="brand-eddie"> Eddie Bauer</label></li>
+                    </ul>
+                </div>
+            </aside>
+
+            <main>
+                <div class="products-grid" id="product-grid">
+                    <div class="product-card" data-brand="Levi's">
+                        <div class="product-card-img"><img src="images/levis-501.webp" alt="Jeans" onerror="this.src='https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&q=80&w=300'"></div>
+                        <div class="product-card-details">
+                            <span class="product-brand">Levi's</span>
+                            <h3 class="product-name">Levi's 501 Jeans Denim</h3>
+                            <div class="product-bottom">
+                                <span class="product-price">$45.00</span>
+                                <a href="https://www.ebay.com/str/thebraunbaredit" class="btn-sm" target="_blank">Buy on eBay</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="product-card" data-brand="Eddie Bauer">
+                        <div class="product-card-img"><img src="images/eddie-bauer-tshirt.webp" alt="T-Shirt" onerror="this.src='https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&q=80&w=300'"></div>
+                        <div class="product-card-details">
+                            <span class="product-brand">Eddie Bauer</span>
+                            <h3 class="product-name">Eddie Bauer Classic T-Shirt</h3>
+                            <div class="product-bottom">
+                                <span class="product-price">$19.99</span>
+                                <a href="https://www.ebay.com/str/thebraunbaredit" class="btn-sm" target="_blank">Buy on eBay</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2026 THE BRAUNBÄR EDIT. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        function filterGrid() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const brandCheckboxes = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value);
+            const cards = document.querySelectorAll('.product-card');
+            
+            cards.forEach(card => {
+                const name = card.querySelector('.product-name').textContent.toLowerCase();
+                const brand = card.getAttribute('data-brand');
+                const matchesSearch = name.includes(query);
+                const matchesBrand = brandCheckboxes.length === 0 || brandCheckboxes.includes(brand);
+
+                if (matchesSearch && matchesBrand) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

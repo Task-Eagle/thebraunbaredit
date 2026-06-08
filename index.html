@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8">
+    <meta name="google-site-verification" content="siZUZgfEMKBYZqDowtewkh_aGeBKlrACqlfs19t3itE" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE BRAUNBÄR EDIT</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css?family=Raleway:ital,wght@0,300;0,400;0,600;0,800;1,400&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* CSS Reset & Variables */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 90px;
+        }
+
+        :root {
+            --primary-color: #8A5E39; 
+            --secondary-color: #D9A876; 
+            --accent-color: #f5efe6; 
+            --dark-text: #463f2f; 
+            --light-bg: #FFFFFF;
+            --font-stack: 'Raleway', sans-serif;
+            --focus-outline: 3px solid #E76F51; 
+        }
+
+        body {
+            font-family: var(--font-stack);
+            color: var(--dark-text);
+            line-height: 1.6;
+            background-color: var(--light-bg);
+        }
+
+        /* Keyboard Accessibility Focus States */
+        a:focus-visible,
+        button:focus-visible,
+        iframe:focus-visible,
+        input:focus-visible {
+            outline: var(--focus-outline);
+            outline-offset: 4px;
+        }
+
+        /* Announcement Banner */
+        .announcement-bar {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            text-align: center;
+            padding: 12px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            z-index: 1001;
+        }
+
+        .announcement-bar a {
+            color: #ffffff;
+            text-decoration: underline;
+            margin: 0 5px;
+            transition: color 0.2s ease;
+        }
+
+        .announcement-bar a:hover {
+            color: var(--secondary-color);
+        }
+
+        /* Buttons styling */
+        .btn {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 700;
+            margin-top: 1.5rem;
+            width: fit-content;
+            text-decoration: none;
+            text-align: center;
+            transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            border: 2px solid var(--primary-color);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            color: #ffffff;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Header Navigation Container */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10%;
+            background-color: rgba(255, 255, 255, 0.712);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .logo img {
+            height: 55px; 
+            width: auto;
+            display: block;
+        }
+
+        /* Nav menu wrapper containing layout items */
+        .nav-container {
+            display: flex;
+            align-items: center;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--dark-text);
+            margin-left: 25px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            padding-bottom: 4px;
+            border-bottom: 2px solid transparent;
+        }
+
+        nav a:hover {
+            color: var(--secondary-color);
+        }
+
+        nav a.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        /* Header Social Media Icons Layout Row */
+        .header-socials {
+            display: flex;
+            gap: 15px;
+            margin-left: 30px;
+            border-left: 1px solid rgba(0, 0, 0, 0.15);
+            padding-left: 20px;
+        }
+
+        .social-icon {
+            color: var(--dark-text);
+            font-size: 1.2rem;
+            transition: color 0.2s ease, transform 0.2s ease;
+            text-decoration: none;
+        }
+
+        .social-icon:hover {
+            color: var(--primary-color);
+            transform: scale(1.15);
+        }
+
+        /* Sandwich Menu Button (Hidden on Desktop) */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 30px;
+            height: 21px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            z-index: 1010;
+        }
+
+        .hamburger span {
+            width: 100%;
+            height: 3px;
+            background-color: var(--dark-text);
+            border-radius: 10px;
+            transition: all 0.3s linear;
+            transform-origin: 1px;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/hero.png') no-repeat center center/cover;
+            padding: 120px 10%;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 450px;
+        }
+
+        .hero-content {
+            max-width: 650px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.833);
+            padding: 40px 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .hero-content h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .hero-content p {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: var(--dark-text);
+            font-weight: 500;
+        }
+
+        /* Content Sections Layout */
+        .section {
+            padding: 90px 10%;
+        }
+
+        .section-alt {
+            background-color: var(--accent-color);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 40px;
+            position: relative;
+            text-transform: uppercase;
+            color: var(--primary-color);
+            letter-spacing: 1px;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 3px;
+            background-color: var(--secondary-color);
+            margin: 15px auto 0 auto;
+        }
+
+        /* Bio/Story Layout Block */
+        .bio-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+            margin-bottom: 50px;
+        }
+
+        .bio-block {
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .bio-block.video-container {
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+            border-left: none;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            aspect-ratio: 16 / 9;
+        }
+
+        .bio-block.video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .bio-block h3 {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .bio-block p {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+
+        /* Categories Section & Card Fixes */
+        .categories-grid {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-top: 40px;
+            width: 100%;
+        }
+
+        .price-box {
+            background: #ffffff;
+            border: 1px solid rgba(0,0,0,0.08);
+            padding: 30px;
+            flex: 1;
+            min-width: 290px;
+            max-width: 420px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .price-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            border-color: var(--secondary-color);
+        }
+
+        .price-box h4 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            color: var(--primary-color);
+            letter-spacing: 0.5px;
+        }
+
+        .price-box img {
+            width: 100%;
+            max-width: 320px;       
+            height: 220px;          
+            object-fit: cover;      
+            border-radius: 8px;
+            margin: 0 auto 15px auto;
+            display: block;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .price-box .btn {
+            margin-top: auto;       
+        }
+
+        /* Grid Framework */
+        .grid-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 40px;
+        }
+
+        /* Text Focus Styling */
+        .intro-text {
+            font-size: 1.15rem;
+            max-width: 800px;
+            margin: 0 auto 30px auto;
+            text-align: center;
+            line-height: 1.8;
+            color: var(--dark-text);
+        }
+
+        /* Before & After Gallery Layout */
+        .gallery-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .gallery-pair {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .gallery-images {
+            display: flex;
+            gap: 15px;
+        }
+
+        .gallery-images div {
+            flex: 1;
+        }
+
+        .gallery-images img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #f0f0f0;
+        }
+
+        .gallery-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #7f8c8d;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .gallery-pair h4 {
+            margin-top: 20px;
+            color: var(--dark-text);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        /* Infinite Slow-Moving Carousel Styling */
+        .carousel-ticker {
+            width: 100%;
+            overflow: hidden;
+            background: #ffffff;
+            padding: 35px 0;
+            border-top: 1px solid rgba(0,0,0,0.06);
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+        }
+
+        .carousel-track {
+            display: flex;
+            width: max-content;
+            animation: scrollMarquee 45s linear infinite;
+        }
+
+        .carousel-ticker:hover .carousel-track {
+            animation-play-state: paused;
+        }
+
+        .carousel-track img {
+            height: 160px;
+            width: 220px;
+            object-fit: cover;
+            margin: 0 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        @keyframes scrollMarquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Testimonials Section */
+        .testimonial-container {
+            max-width: 850px;
+            margin: 0 auto;
+        }
+
+        .testimonial-block {
+            background: #ffffff;
+            padding: 35px 40px;
+            border-left: 5px solid var(--secondary-color);
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            font-style: italic;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .testimonial-text {
+            font-size: 1.1rem;
+            line-height: 1.7;
+        }
+
+        .testimonial-author {
+            font-style: normal;
+            font-weight: 700;
+            margin-top: 15px;
+            color: var(--primary-color);
+            text-align: right;
+            display: block;
+            font-size: 0.95rem;
+        }
+
+        /* Location Block Wrapper */
+        .location-block {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .location-info {
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .location-info h3 {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .location-info p {
+            margin-bottom: 12px;
+            font-size: 1.05rem;
+        }
+
+        .location-info a {
+            color: var(--primary-color);
+            font-weight: 700;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .location-info a:hover {
+            color: var(--secondary-color);
+            text-decoration: underline;
+        }
+
+        .map-embed {
+            flex: 1.2;
+            min-width: 320px;
+            height: 350px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .map-embed iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: #ffffff;
+            padding: 15px 35px;
+            text-decoration: none;
+            font-weight: 700;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            text-align: center;
+        }
+
+        .cta-button:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        /* Contact Footer Block modification */
+        footer {
+            background-color: var(--dark-text);
+            color: #ffffff;
+            padding: 60px 10% 40px 10%;
+            text-align: center;
+        }
+
+        .footer-content h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: var(--accent-color);
+        }
+
+        .footer-socials {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .footer-socials .social-icon {
+            color: #ffffff;
+            font-size: 1.5rem;
+        }
+
+        .footer-socials .social-icon:hover {
+            color: var(--secondary-color);
+        }
+
+        .phone-display {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin: 10px 0 20px 0;
+            text-decoration: none;
+            display: inline-block;
+            transition: color 0.3s ease;
+        }
+
+        .phone-display:hover {
+            color: var(--secondary-color);
+        }
+
+        .footer-note {
+            margin-top: 40px;
+            font-size: 0.85rem;
+            color: #a4b0be;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 20px;
+        }
+
+
+        /* RESPONSIVE BREAKPOINTS (Where the sandwich menu triggers) */
+        @media (max-width: 992px) {
+            /* Show the three-line sandwich button */
+            .hamburger {
+                display: flex;
+            }
+
+            /* Turn navigation wrap block into a drop-down drawer overlay */
+            .nav-container {
+                position: fixed;
+                top: 86px; /* Exactly below header height */
+                left: -100%; /* Hidden off-screen by default */
+                flex-direction: column;
+                background-color: rgba(255, 255, 255, 0.98);
+                width: 100%;
+                height: calc(100vh - 86px);
+                text-align: center;
+                transition: 0.3s ease-in-out;
+                box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+                padding: 40px 0;
+                justify-content: flex-start;
+                gap: 25px;
+                overflow-y: auto;
+            }
+
+            /* Triggered via JS: Slides the drawer out */
+            .nav-container.open {
+                left: 0;
+            }
+
+            nav {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+                width: 100%;
+            }
+
+            nav a {
+                margin-left: 0;
+                font-size: 1.2rem;
+                display: inline-block;
+                padding: 10px 0;
+                width: fit-content;
+                margin: 0 auto;
+            }
+
+            /* Center socials in responsive screen menu drawer */
+            .header-socials {
+                margin-left: 0;
+                border-left: none;
+                padding-left: 0;
+                border-top: 1px solid rgba(0, 0, 0, 0.1);
+                padding-top: 20px;
+                width: 80%;
+                justify-content: center;
+                gap: 25px;
+            }
+
+            .header-socials .social-icon {
+                font-size: 1.5rem;
+            }
+
+            /* JavaScript Active Animation Code for Sandwich Menu (Creates an X) */
+            .hamburger.active span:nth-child(1) {
+                transform: rotate(45deg) translate(1px, 1px);
+            }
+
+            .hamburger.active span:nth-child(2) {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            .hamburger.active span:nth-child(3) {
+                transform: rotate(-45deg) translate(1px, -1px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 15px 5%;
+            }
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+            .hero-content {
+                padding: 25px;
+            }
+            .section {
+                padding: 60px 5%;
+            }
+            .bio-section {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .gallery-images {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="announcement-bar">
+         <a href="#categories">Browse our products</a> or <a href="https://www.ebay.com/str/thebraunbaredit" target="_blank" rel="noopener">Visit our eBay Store</a>
+    </div>
+
+    <header>
+        <a href="#hero" class="logo">
+            <img src="images/braunbar-logo.png" alt="THE BRAUNBÄR EDIT logo">
+        </a>
+
+        <button class="hamburger" id="hamburger-btn" aria-label="Toggle Menu Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <div class="nav-container" id="nav-container">
+            <nav id="nav-menu">
+                <a href="#about">About Us</a>
+                <a href="#categories">Categories</a>
+                <a href="#gallery">Eco-Commitment</a>
+                <a href="#reviews">Reviews</a>
+                <a href="#find-us">Find Us</a>
+            </nav>
+            
+            <div class="header-socials">
+                <a href="https://www.youtube.com/@TheBraunb%C3%A4rEdit" target="_blank" rel="noopener" class="social-icon" title="YouTube"><i class="fab fa-youtube"></i></a>
+                <a href="https://facebook.com/yourprofile" target="_blank" rel="noopener" class="social-icon" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://instagram.com/yourprofile" target="_blank" rel="noopener" class="social-icon" title="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="https://twitter.com/yourprofile" target="_blank" rel="noopener" class="social-icon" title="Twitter / X"><i class="fab fa-x-twitter"></i></a>
+                <a href="https://yelp.com/yourprofile" target="_blank" rel="noopener" class="social-icon" title="Yelp"><i class="fab fa-yelp"></i></a>
+            </div>
+        </div>
+    </header>
+
+    <section id="hero" class="hero">
+        <div class="hero-content">
+            <h1>The Braunbär Edit</h1>
+            <p>Meticulously sourced, premium apparel & collectibles curated right from the San Francisco Bay Area.</p>
+            <a href="#categories" class="cta-button">Browse Collection</a>
+        </div>
+    </section>
+
+    <section id="about" class="section">
+        <h2 class="section-title">Welcome to our store</h2>
+        
+        <div class="bio-section">
+            <div class="bio-block">
+                <h3>The Braunbär Edit</h3>
+                <p><strong>Premium Apparel & Sourced Artifacts</strong></p>
+                <p>We meticulously source only the finest clothes and collectibles. Centered in the San Francisco Bay Area, our team curates high-quality goods and brings them straight to your home.</p>
+                <p>Enjoy handpicked items that match your style, backed by our commitment to great service.</p>
+                <em style="color: var(--primary-color); font-weight: bold; margin-top: 10px; display: block;">— The Braunbär Edit Team</em>
+            </div>
+            <div class="bio-block video-container">
+                <iframe src="https://www.youtube.com/embed/gSUoQjTOLLk" title="THE BRAUNBÄR EDIT - IZOD Short" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+        </div>
+    </section>
+
+    <section id="categories" class="section section-alt">
+        <h2 class="section-title">Categories</h2>
+        <div class="intro-text">
+            <p>Explore our premium collections of timeless fashion wear and hard-to-find curated memorabilia.</p>
+        </div>
+
+        <div class="categories-grid">
+            <div class="price-box">
+                <h4>The Apparel Edit</h4>
+                <img src="images/levis-501.webp" alt="The Apparel Edit - Denim & Classic wear">
+                <a href="apparel.html" class="btn">Browse Apparel</a>
+            </div>
+            <div class="price-box">
+                <h4>THE COLLECTIBLES ARCHIVE</h4>
+                <img src="images/nhl-official-guide.webp" alt="The Collectibles Archive - Memorabilia & Books">
+                <a href="collectibles.html" class="btn">Browse Collectibles</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="gallery" class="section">
+        <h2 class="section-title">Eco-friendly commitment</h2>
+        <div class="intro-text">
+            <p>With our warehouse located in the San Francisco Bay Area, we source clothes and package them with recyclable materials, including high-quality paper bags, to ensure a safe delivery and a greener earth 🌱.</p>
+        </div>
+        <div class="gallery-container">
+            <div class="gallery-pair">
+                <div class="gallery-images">
+                    <div>
+                        <img src="images/bag1.png" alt="Eco-friendly packaging paper bag logo">
+                        <div class="gallery-label">Paper Bag</div>
+                    </div>
+                    <div>
+                        <img src="images/box1.png" alt="Eco-friendly premium shipping paper box">
+                        <div class="gallery-label">Paper Box</div>
+                    </div>
+                </div>
+                <h4>Images of our Bag and Box</h4>
+            </div>
+        </div>
+
+        <div class="grid-container">
+            <a href="categories.html" class="cta-button">Browse Our Products</a>
+            <p style="margin: 10px 0; font-weight: bold; color: var(--primary-color);">OR</p>
+            <a href="https://www.ebay.com/str/thebraunbaredit" target="_blank" rel="noopener" class="cta-button">Buy on eBay</a>
+        </div>
+    </section>
+
+    <div class="carousel-ticker">
+        <div class="carousel-track">
+            <img src="images/eddie-bauer-tshirt.webp" alt="Eddie Bauer T-Shirt">
+            <img src="images/fifa-cap.webp" alt="FIFA Official Cap">
+            <img src="images/fifa-water-bottle.webp" alt="FIFA Official Water Bottle">
+            <img src="images/peanutsteam-snoopy-shirt.webp" alt="Peanuts Team Snoopy T-Shirt">
+            <img src="images/levis-501.webp" alt="Levi's 501 Jeans Denim">
+            <img src="images/slim-polo-shirt.webp" alt="Slim Polo Shirt">
+            <img src="images/dragonball-supermasters-cards.webp" alt="DragonBall Supermasters Cards Set">
+            <img src="images/nhl-official-guide.webp" alt="NHL Official Guide and Record Book 1986-87">
+            <img src="images/baseball-encyclopedia.webp" alt="Baseball Encyclopedia">
+
+            <img src="images/eddie-bauer-tshirt.webp" alt="Eddie Bauer T-Shirt">
+            <img src="images/fifa-cap.webp" alt="FIFA Official Cap">
+            <img src="images/fifa-water-bottle.webp" alt="FIFA Official Water Bottle">
+            <img src="images/peanutsteam-snoopy-shirt.webp" alt="Peanuts Team Snoopy T-Shirt">
+            <img src="images/levis-501.webp" alt="Levi's 501 Jeans Denim">
+            <img src="images/slim-polo-shirt.webp" alt="Slim Polo Shirt">
+            <img src="images/dragonball-supermasters-cards.webp" alt="DragonBall Supermasters Cards Set">
+            <img src="images/nhl-official-guide.webp" alt="NHL Official Guide and Record Book 1986-87">
+            <img src="images/baseball-encyclopedia.webp" alt="Baseball Encyclopedia">
+        </div>
+    </div>
+
+    <section id="reviews" class="section section-alt">
+        <h2 class="section-title">Comments from buyers - 100% Positive Feedback</h2>
+
+        <div class="testimonial-container">
+            <div class="testimonial-block">
+                <p class="testimonial-text">"Just as advertised Extremely quick turn around SuperFast ship securely packaged! packs like a pro Thanks again Quality EBayer highly recommended AAAAAAAA++++++++"</p>
+                <span class="testimonial-author">- _***h</span>
+            </div>
+            <div class="testimonial-block">
+                <p class="testimonial-text">"Thanks for a great deal!!"</p>
+                <span class="testimonial-author">- k***e</span>
+            </div>
+        </div>
+    </section>
+
+    <section id="find-us" class="section">
+        <h2 class="section-title">Find us on Social Media</h2>
+        <div class="location-block">
+            <div class="location-info">
+                <h3>THE BRAUNBÄR EDIT</h3>
+                <p><strong>Email Address:</strong><br><a href="mailto:thebraunbaredit@gmail.com">thebraunbaredit@gmail.com</a></p>
+                <p><strong>Phone Number:</strong><br><a href="tel:5107386964">(510) 738-6964</a></p>
+            </div>
+            <div class="map-embed">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3259429.4211529326!2d-122.94770579493182!3d37.080436499457974!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808583a3a688d7b5%3A0x8c891b8457461fa9!2sSan%20Francisco%20Bay%20Area%2C%20CA!5e0!3m2!1sen!2sus!4v1780805940985!5m2!1sen!2sus" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+        </div>
+    </section>
+
+    <footer id="footer">
+        <div class="footer-content">
+            <div class="footer-socials">
+                <a href="https://www.youtube.com/@TheBraunb%C3%A4rEdit" target="_blank" rel="noopener" class="social-icon"><i class="fab fa-youtube"></i></a>
+                <a href="https://facebook.com/yourprofile" target="_blank" rel="noopener" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://instagram.com/yourprofile" target="_blank" rel="noopener" class="social-icon"><i class="fab fa-instagram"></i></a>
+                <a href="https://twitter.com/yourprofile" target="_blank" rel="noopener" class="social-icon"><i class="fab fa-x-twitter"></i></a>
+                <a href="https://yelp.com/yourprofile" target="_blank" rel="noopener" class="social-icon"><i class="fab fa-yelp"></i></a>
+            </div>
+            
+            <a href="tel:5107386964" class="phone-display">(510) 738-6964</a>
+            <p>The Braunbär Edit - Buy With Purpose</p>
+        </div>
+        <div class="footer-note">
+            <p>© 2026 THE BRAUNBÄR EDIT. All Rights Reserved - Our mission to provide High-Quality, Eco-friendly service.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Active section tracking logic setup
+        const sections = document.querySelectorAll('section, footer');
+        const navLinks = document.querySelectorAll('#nav-menu a');
+
+        const observerOptions = {
+            root: null,
+            rootMargin: '-50% 0px -50% 0px',
+            threshold: 0
+        };
+
+        const sectionObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const activeId = entry.target.getAttribute('id');
+                    navLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === `#${activeId}`) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }, observerOptions);
+
+        sections.forEach(section => sectionObserver.observe(section));
+
+        // --- NEW LANDSCAPE/MOBILE HAMBURGER NAVIGATION LOGIC ---
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const navContainer = document.getElementById('nav-container');
+        const menuLinks = document.querySelectorAll('#nav-menu a');
+
+        // Toggle open state on sandwich click
+        hamburgerBtn.addEventListener('click', () => {
+            hamburgerBtn.classList.toggle('active');
+            navContainer.classList.toggle('open');
+        });
+
+        // Close menu dynamically when an internal section link is clicked
+        menuLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                hamburgerBtn.classList.remove('active');
+                navContainer.classList.remove('open');
+            });
+        });
+    </script>
+</body>
+</html>

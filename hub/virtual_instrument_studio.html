@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acoustic & Electric Virtual String Studio</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts for premium woodcraft look -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      font-family: 'Outfit', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      background-color: #120c08;
+      overflow-x: hidden;
+    }
+    .wood-font {
+      font-family: 'Cinzel', serif;
+    }
+    /* Premium Wood Grains */
+    .wood-body {
+      background: radial-gradient(circle, #3d2314 0%, #1c0e07 100%);
+      position: relative;
+    }
+    .wood-grain {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Cpath d='M0 100 C 100 80, 200 120, 400 100 M0 200 C 150 170, 250 230, 400 200 M0 300 C 100 320, 300 280, 400 300' stroke='%232b170c' stroke-width='1.5' fill='none' opacity='0.25'/%3E%3Cpath d='M0 50 C 80 30, 150 70, 400 30 M0 150 C 120 130, 280 180, 400 140 M0 250 C 180 220, 220 270, 400 240 M0 350 C 90 380, 310 330, 400 360' stroke='%23120602' stroke-width='1' fill='none' opacity='0.15'/%3E%3C/svg%3E");
+    }
+    .fretboard-wood {
+      background: linear-gradient(90deg, #1f140e 0%, #2a1b13 50%, #1f140e 100%);
+    }
+    /* Ambient Glows */
+    .glow-orange {
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+    }
+    .glow-string {
+      box-shadow: 0 0 8px rgba(253, 230, 138, 0.6);
+    }
+    /* No scrollbar */
+    ::-webkit-scrollbar {
+      display: none;
+    }
+    /* CSS String vibrate keyframes */
+    @keyframes vibrate {
+      0% { transform: scaleX(1); }
+      20% { transform: scaleX(1.04) translateX(-1px); }
+      40% { transform: scaleX(0.96) translateX(1px); }
+      60% { transform: scaleX(1.02) translateX(-0.5px); }
+      80% { transform: scaleX(0.98) translateX(0.5px); }
+      100% { transform: scaleX(1); }
+    }
+    .vibrating {
+      animation: vibrate 0.5s ease-in-out;
+    }
+  </style>
+</head>
+<body class="h-screen w-screen overflow-hidden text-amber-50">
+
+  <!-- Main App View -->
+  <div class="wood-body wood-grain h-full w-full flex flex-col p-3 md:p-4 select-none relative">
+    
+    <!-- Header Controls Panel -->
+    <header class="flex flex-wrap items-center justify-between bg-black/40 backdrop-blur-md border border-amber-950/40 rounded-xl p-3 mb-2 shrink-0 z-10 gap-3">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-amber-950/80 rounded-lg border border-amber-800/40 shadow-inner">
+          <i data-lucide="music-4" class="w-6 h-6 text-amber-400"></i>
+        </div>
+        <div>
+          <h1 class="wood-font text-lg md:text-xl font-bold tracking-wider text-amber-100 flex items-center gap-2">
+            WOODCRAFT <span class="text-amber-500 text-xs md:text-sm font-sans tracking-normal font-normal bg-amber-950/90 border border-amber-700/30 px-2 py-0.5 rounded-full">STRINGS</span>
+          </h1>
+          <p class="text-[10px] md:text-xs text-amber-400/80 tracking-wide">Premium Virtual Fretboard & Strummer</p>
+        </div>
+      </div>
+
+      <!-- Quick Setup Row -->
+      <div class="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm">
+        
+        <!-- Instrument Select -->
+        <div class="flex bg-black/50 p-1 rounded-lg border border-amber-900/40">
+          <button id="btn-guitar" onclick="setInstrument('guitar')" class="px-3 py-1.5 rounded-md font-semibold transition-all duration-300 bg-amber-700 text-white shadow-md">
+            Guitar
+          </button>
+          <button id="btn-ukulele" onclick="setInstrument('ukulele')" class="px-3 py-1.5 rounded-md font-semibold transition-all duration-300 text-amber-300 hover:text-white">
+            Ukulele
+          </button>
+          <button id="btn-bass" onclick="setInstrument('bass')" class="px-3 py-1.5 rounded-md font-semibold transition-all duration-300 text-amber-300 hover:text-white">
+            Bass
+          </button>
+        </div>
+
+        <!-- Mode Toggle: Chords vs Fretboard -->
+        <div class="flex items-center gap-2 bg-black/50 p-1 rounded-lg border border-amber-900/40">
+          <button id="btn-mode-chords" onclick="setViewMode('chords')" class="px-3 py-1.5 rounded-md font-semibold transition-all duration-300 bg-amber-800 text-white flex items-center gap-1">
+            <i data-lucide="grid-3x3" class="w-4 h-4"></i> Chord Pad
+          </button>
+          <button id="btn-mode-fretboard" onclick="setViewMode('fretboard')" class="px-3 py-1.5 rounded-md font-semibold transition-all duration-300 text-amber-300 hover:text-white flex items-center gap-1">
+            <i data-lucide="columns-4" class="w-4 h-4"></i> Fretboard
+          </button>
+        </div>
+
+        <!-- Audio Context Guard & Volume -->
+        <div class="flex items-center gap-2 bg-black/50 px-3 py-1 rounded-lg border border-amber-900/40">
+          <i data-lucide="volume-2" class="w-4 h-4 text-amber-500"></i>
+          <input type="range" id="volume-control" min="0" max="1" step="0.1" value="0.7" oninput="updateVolume(this.value)" class="w-16 accent-amber-500 cursor-pointer">
+        </div>
+
+        <!-- Master Tuning Presets (Key scale for Chords) -->
+        <div id="chord-tuning-container" class="flex items-center gap-1.5">
+          <span class="text-amber-400 text-xs font-semibold">Key:</span>
+          <select id="tuning-key" onchange="changeTuningKey(this.value)" class="bg-amber-950 text-amber-200 border border-amber-800/60 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500">
+            <option value="C">C Major / A minor</option>
+            <option value="G">G Major / E minor</option>
+            <option value="D">D Major / B minor</option>
+            <option value="F">F Major / D minor</option>
+          </select>
+        </div>
+
+        <!-- Reset Button -->
+        <button onclick="resetAll()" class="p-1.5 bg-red-950/60 border border-red-800/40 rounded-lg hover:bg-red-900/60 text-red-300 transition-all flex items-center gap-1 text-xs" title="Reset frets & modes">
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reset
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Dynamic Instrument Workspace -->
+    <main class="flex-1 flex flex-row gap-3 min-h-0 relative">
+      
+      <!-- LEFT SIDE: Chord Pad Grid OR Fretboard Interface -->
+      <section class="w-[55%] flex flex-col bg-black/40 rounded-2xl border border-amber-900/20 backdrop-blur-sm overflow-hidden p-2 relative">
+        
+        <!-- Interactive Chord Pad Mode (Default) -->
+        <div id="chord-pad-container" class="h-full flex flex-col justify-between">
+          <div class="flex items-center justify-between px-2 py-1 border-b border-amber-900/20 mb-2 shrink-0">
+            <span class="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
+              <i data-lucide="music" class="w-3.5 h-3.5"></i> Harmonic Chord Selector
+            </span>
+            <span class="text-[11px] text-amber-400/80">Tap to fret strings perfectly</span>
+          </div>
+
+          <!-- Chord Pads Grid -->
+          <div id="chord-grid" class="flex-1 grid grid-cols-3 gap-2 p-1 overflow-y-auto">
+            <!-- Dynamically populated chord buttons -->
+          </div>
+
+          <!-- Dynamic Finger Guide -->
+          <div class="bg-amber-950/40 border border-amber-900/30 rounded-xl p-2.5 mt-2 flex items-center justify-between text-xs shrink-0">
+            <div class="flex items-center gap-2">
+              <span class="text-amber-500 font-bold">Active Fingering:</span>
+              <span id="active-chord-name" class="font-extrabold text-amber-100 bg-amber-900/40 px-2 py-0.5 rounded text-sm tracking-wide">C Major</span>
+            </div>
+            <div id="fingering-display" class="flex gap-2 text-[11px] font-mono text-amber-300 bg-black/50 px-2.5 py-1 rounded border border-amber-800/20">
+              <!-- e.g. X - 3 - 2 - 0 - 1 - 0 -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Fretboard Mode -->
+        <div id="fretboard-container" class="hidden h-full flex-col justify-between">
+          <div class="flex items-center justify-between px-2 py-1 border-b border-amber-900/20 mb-2 shrink-0">
+            <span class="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
+              <i data-lucide="layers" class="w-3.5 h-3.5"></i> Manual Fretboard Composer
+            </span>
+            <span class="text-[11px] text-amber-400/80">Tap frets to customize custom tunings</span>
+          </div>
+
+          <!-- The Scrollable Fretboard -->
+          <div class="flex-1 overflow-x-auto overflow-y-hidden flex items-center p-1 rounded-xl bg-black/20 border border-amber-950/40 shadow-inner">
+            <div id="fretboard-wood" class="fretboard-wood wood-grain border-y-4 border-amber-950/80 rounded-lg flex relative min-w-max h-full shadow-2xl items-stretch">
+              
+              <!-- Nut Column (Zero Fret) -->
+              <div class="w-12 border-r-4 border-amber-100/30 flex flex-col justify-around py-2 shrink-0 bg-amber-950/20">
+                <div class="text-[10px] text-center font-bold text-amber-500/80 uppercase">Nut</div>
+                <!-- Interactive Open String indicators -->
+                <div id="nut-string-indicators" class="flex-1 flex flex-col justify-around items-center">
+                  <!-- Strings will go here -->
+                </div>
+              </div>
+
+              <!-- Frets Columns (1 to 12) -->
+              <div id="frets-columns-container" class="flex flex-1 items-stretch">
+                <!-- Dynamically generated frets -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom guide -->
+          <div class="flex items-center justify-between mt-2 px-1 text-[11px] text-amber-400/80 shrink-0">
+            <span>💡 Tap nut (far left) to play open string, or any fret to press.</span>
+            <button onclick="clearAllFrets()" class="px-2 py-0.5 bg-amber-900/30 hover:bg-amber-900/60 border border-amber-800/40 rounded text-[10px] text-amber-300 transition-all">
+              Clear Frets
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- RIGHT SIDE: Strings & Strum Zone -->
+      <section class="flex-1 flex flex-col bg-black/50 border border-amber-900/30 rounded-2xl overflow-hidden p-2.5 relative">
+        
+        <!-- Header Info / Strum Guidance -->
+        <div class="flex items-center justify-between px-2 pb-2 border-b border-amber-900/20 shrink-0">
+          <div class="flex items-center gap-2">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-xs font-bold text-amber-300 tracking-wider">STRUM & PICK STRIP ZONE</span>
+          </div>
+          <span class="text-[10px] md:text-xs text-amber-400/80">Swipe across to strum, tap to pick</span>
+        </div>
+
+        <!-- The Interactive Strings Canvas/Layout -->
+        <div class="flex-1 flex flex-row items-stretch justify-around relative my-4 px-4 bg-gradient-to-b from-amber-950/20 via-black/40 to-amber-950/20 rounded-xl overflow-hidden shadow-inner border border-amber-900/10" id="strum-interaction-zone">
+          
+          <!-- Sound Hole / Premium Audio Visual background decor -->
+          <div class="absolute inset-y-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-56 md:h-56 rounded-full bg-gradient-to-br from-amber-950/80 to-black/95 opacity-80 border-4 border-amber-900/60 shadow-[inset_0_0_20px_rgba(0,0,0,0.9)] flex items-center justify-center pointer-events-none">
+            <div class="w-[85%] h-[85%] rounded-full border border-dashed border-amber-800/40 flex items-center justify-center">
+              <i data-lucide="disc" class="w-12 h-12 text-amber-800/20 animate-spin" style="animation-duration: 25s"></i>
+            </div>
+          </div>
+
+          <!-- Generated strings live here -->
+          <div id="physical-strings-container" class="absolute inset-0 flex flex-row justify-around items-stretch px-12 z-10 pointer-events-none">
+            <!-- Dynamic vertical strings overlay with shiny metal gradient backgrounds -->
+          </div>
+
+          <!-- Strum Interactive Touch Area Box -->
+          <div id="touch-detector" class="absolute inset-0 z-20 cursor-crosshair"></div>
+        </div>
+
+        <!-- Quick Strum Help / Auto-Arpeggio helper -->
+        <div class="flex items-center justify-between p-1 bg-amber-950/20 border border-amber-950/60 rounded-xl shrink-0 gap-3">
+          <button id="btn-strum-down" onclick="autoStrum(true)" class="flex-1 py-2 px-3 bg-gradient-to-r from-amber-800 to-amber-750 hover:from-amber-750 hover:to-amber-700 active:scale-[0.98] transition-all rounded-lg text-xs font-bold border border-amber-600/30 flex items-center justify-center gap-1.5 shadow-md">
+            <i data-lucide="chevrons-right" class="w-4 h-4 rotate-90"></i> Down Strum
+          </button>
+          <button id="btn-strum-up" onclick="autoStrum(false)" class="flex-1 py-2 px-3 bg-gradient-to-r from-amber-800 to-amber-750 hover:from-amber-750 hover:to-amber-700 active:scale-[0.98] transition-all rounded-lg text-xs font-bold border border-amber-600/30 flex items-center justify-center gap-1.5 shadow-md">
+            <i data-lucide="chevrons-left" class="w-4 h-4 rotate-90"></i> Up Strum
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer Help overlay toggle -->
+    <footer class="flex items-center justify-between text-[11px] text-amber-400/70 border-t border-amber-950/40 pt-2 shrink-0">
+      <div class="flex items-center gap-3">
+        <span>Press <kbd class="px-1.5 py-0.5 bg-amber-950 border border-amber-900 rounded text-amber-300 font-mono">1-6</kbd> on keyboard for instant strums!</span>
+        <span class="hidden md:inline">• Swipe with mouse/finger across strings to hear beautiful arpeggios</span>
+      </div>
+      <button onclick="toggleHelpModal()" class="text-amber-400 hover:text-amber-100 font-bold transition-all flex items-center gap-1">
+        <i data-lucide="info" class="w-3.5 h-3.5"></i> How it works
+      </button>
+    </footer>
+
+  </div>
+
+  <!-- Help / Info Modal overlay -->
+  <div id="help-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+    <div class="bg-amber-950 border border-amber-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative wood-grain">
+      <button onclick="toggleHelpModal()" class="absolute top-4 right-4 text-amber-300 hover:text-amber-100 p-1 bg-black/20 hover:bg-black/40 rounded-full transition-all">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+      
+      <h2 class="wood-font text-xl md:text-2xl font-bold text-amber-100 mb-4 border-b border-amber-900 pb-2">
+        Virtual String Studio
+      </h2>
+
+      <div class="space-y-3.5 text-xs md:text-sm text-amber-200/90 leading-relaxed max-h-96 overflow-y-auto pr-1">
+        <p>This premium virtual instrument simulator enables realistic chord playing, individual string picking, and beautiful strumming. Use a pair of headphones for optimal acoustic frequency details!</p>
+        
+        <div class="bg-black/30 p-3 rounded-lg border border-amber-900/40">
+          <h3 class="font-bold text-amber-400 flex items-center gap-1 mb-1.5">
+            <i data-lucide="music-4" class="w-4 h-4"></i> Interaction Modes
+          </h3>
+          <ul class="list-disc list-inside space-y-1 text-amber-300">
+            <li><strong>Chord Pad Mode:</strong> Tap on quick-chord buttons (like C, F, G7, Am) on the left. The app instantly fingers the instrument's frets so that strums yield harmonious chord soundscapes.</li>
+            <li><strong>Fretboard Mode:</strong> Gain complete manual control! Touch arbitrary frets on the virtual instrument fretboard on the left to set custom hand positions.</li>
+          </ul>
+        </div>
+
+        <div class="bg-black/30 p-3 rounded-lg border border-amber-900/40">
+          <h3 class="font-bold text-amber-400 flex items-center gap-1 mb-1.5">
+            <i data-lucide="guitar" class="w-4 h-4"></i> How to Play Sound
+          </h3>
+          <ul class="list-disc list-inside space-y-1 text-amber-300">
+            <li><strong>Strumming:</strong> Hold and drag your cursor/finger continuously across the visual strings on the right.</li>
+            <li><strong>Individual picking:</strong> Simply tap any single string directly.</li>
+            <li><strong>Keyboard Shortcuts:</strong> Use numerical keys <kbd class="px-1 py-0.5 bg-amber-900 text-amber-200 rounded font-mono font-bold">1</kbd> to <kbd class="px-1 py-0.5 bg-amber-900 text-amber-200 rounded font-mono font-bold">6</kbd> to quickly simulate rolling strums.</li>
+          </ul>
+        </div>
+        
+        <p class="text-amber-400/80 text-[11px] italic">Built using high-performance Web Audio API string resonators. No heavy external assets or samples needed, loading is instantaneous.</p>
+      </div>
+
+      <div class="mt-6 flex justify-end">
+        <button onclick="toggleHelpModal()" class="px-5 py-2.5 bg-amber-700 hover:bg-amber-600 font-bold rounded-lg text-xs md:text-sm transition-all text-white shadow-lg">
+          Let's Play!
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio Context Activator Splash Screen (Only shows if browser requires interaction) -->
+  <div id="welcome-overlay" class="fixed inset-0 bg-gradient-to-br from-[#1c0e07] to-[#0c0502] flex flex-col items-center justify-center z-40 p-4">
+    <div class="text-center max-w-md p-8 bg-amber-950/40 rounded-2xl border border-amber-900/30 backdrop-blur-lg wood-grain shadow-2xl">
+      <div class="mb-4 inline-flex p-4 bg-amber-900/40 border border-amber-700/30 rounded-full animate-bounce">
+        <i data-lucide="sparkles" class="w-8 h-8 text-amber-400"></i>
+      </div>
+      <h2 class="wood-font text-2xl md:text-3xl font-extrabold text-amber-100 tracking-wider mb-2">
+        WOODCRAFT STRINGS
+      </h2>
+      <p class="text-xs md:text-sm text-amber-300/80 mb-6">
+        Click below to initialize high-fidelity synthetic Web Audio engine and start strumming.
+      </p>
+      <button onclick="initializeAudio()" class="w-full py-3.5 bg-gradient-to-r from-amber-600 to-amber-800 hover:from-amber-500 hover:to-amber-700 active:scale-[0.98] text-white font-extrabold text-sm rounded-xl transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)]">
+        ENTER VIRTUAL STUDIO
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // App state
+    let activeInstrument = 'guitar'; // guitar, ukulele, bass
+    let currentViewMode = 'chords';  // chords, fretboard
+    let currentTuningKey = 'C';     // C, G, D, F
+    let audioContextInitialized = false;
+    let audioCtx = null;
+    let masterVolumeNode = null;
+    
+    // Instrument Open String pitches
+    const instrumentTunings = {
+      guitar: [
+        { note: 'E2', freq: 82.41 },   // String 6 (lowest pitch)
+        { note: 'A2', freq: 110.00 },  // String 5
+        { note: 'D3', freq: 146.83 },  // String 4
+        { note: 'G3', freq: 196.00 },  // String 3
+        { note: 'B3', freq: 246.94 },  // String 2
+        { note: 'E4', freq: 329.63 }   // String 1 (highest pitch)
+      ],
+      ukulele: [
+        { note: 'G4', freq: 392.00 },  // String 4 (re-entrant soprano)
+        { note: 'C4', freq: 261.63 },  // String 3
+        { note: 'E4', freq: 329.63 },  // String 2
+        { note: 'A4', freq: 440.00 }   // String 1
+      ],
+      bass: [
+        { note: 'E1', freq: 41.20 },   // String 4 (lowest pitch)
+        { note: 'A1', freq: 55.00 },   // String 3
+        { note: 'D2', freq: 73.42 },   // String 2
+        { note: 'G2', freq: 98.00 }    // String 1
+      ]
+    };
+
+    // User active fingers/frets representation.
+    // Index matches the string order (0 is lowest index, i.e., highest pitch/physically right-most, or string list indexes).
+    // For guitar: 6 items (index 0 to 5 correspond to Strings 6, 5, 4, 3, 2, 1).
+    // Array value: fret index (0 = open, -1 = muted/unplayed, 1-12 = pressed frets).
+    let activeFrets = [0, 0, 0, 0, 0, 0];
+
+    // Key-specific Chords database
+    const keyChordPacks = {
+      C: {
+        chords: [
+          { name: 'C', label: 'C Major', guitar: [-1, 3, 2, 0, 1, 0], ukulele: [0, 0, 0, 3], bass: [-1, 3, 2, 0] },
+          { name: 'F', label: 'F Major', guitar: [1, 3, 3, 2, 1, 1], ukulele: [2, 0, 1, 0], bass: [1, 3, 3, 2] },
+          { name: 'G7', label: 'G Dom 7', guitar: [3, 2, 0, 0, 0, 1], ukulele: [0, 2, 1, 2], bass: [3, 2, 3, 0] },
+          { name: 'Am', label: 'A Minor', guitar: [-1, 0, 2, 2, 1, 0], ukulele: [2, 0, 0, 0], bass: [-1, 0, 2, 2] },
+          { name: 'Dm', label: 'D Minor', guitar: [-1, -1, 0, 2, 3, 1], ukulele: [2, 2, 1, 0], bass: [-1, 5, 7, 7] },
+          { name: 'E7', label: 'E Dom 7', guitar: [0, 2, 0, 1, 3, 0], ukulele: [1, 2, 0, 2], bass: [0, 2, 0, 1] }
+        ]
+      },
+      G: {
+        chords: [
+          { name: 'G', label: 'G Major', guitar: [3, 2, 0, 0, 0, 3], ukulele: [0, 2, 3, 2], bass: [3, 2, 0, 0] },
+          { name: 'C', label: 'C Major', guitar: [-1, 3, 2, 0, 1, 0], ukulele: [0, 0, 0, 3], bass: [-1, 3, 2, 0] },
+          { name: 'D7', label: 'D Dom 7', guitar: [-1, -1, 0, 2, 1, 2], ukulele: [2, 0, 2, 0], bass: [-1, 5, 4, 5] },
+          { name: 'Em', label: 'E Minor', guitar: [0, 2, 2, 0, 0, 0], ukulele: [0, 4, 3, 2], bass: [0, 2, 2, 0] },
+          { name: 'Am', label: 'A Minor', guitar: [-1, 0, 2, 2, 1, 0], ukulele: [2, 0, 0, 0], bass: [-1, 0, 2, 2] },
+          { name: 'B7', label: 'B Dom 7', guitar: [-1, 2, 1, 2, 0, 2], ukulele: [4, 3, 2, 0], bass: [-1, 2, 1, 2] }
+        ]
+      },
+      D: {
+        chords: [
+          { name: 'D', label: 'D Major', guitar: [-1, -1, 0, 2, 3, 2], ukulele: [2, 2, 2, 0], bass: [-1, 5, 4, 2] },
+          { name: 'G', label: 'G Major', guitar: [3, 2, 0, 0, 0, 3], ukulele: [0, 2, 3, 2], bass: [3, 2, 0, 0] },
+          { name: 'A7', label: 'A Dom 7', guitar: [-1, 0, 2, 0, 2, 0], ukulele: [0, 1, 0, 0], bass: [-1, 0, 2, 0] },
+          { name: 'Bm', label: 'B Minor', guitar: [-1, 2, 4, 4, 3, 2], ukulele: [4, 2, 2, 2], bass: [-1, 2, 4, 4] },
+          { name: 'Em', label: 'E Minor', guitar: [0, 2, 2, 0, 0, 0], ukulele: [0, 4, 3, 2], bass: [0, 2, 2, 0] },
+          { name: 'F#7', label: 'F# Dom 7', guitar: [2, 4, 2, 3, 2, 2], ukulele: [3, 4, 2, 4], bass: [2, 4, 2, 3] }
+        ]
+      },
+      F: {
+        chords: [
+          { name: 'F', label: 'F Major', guitar: [1, 3, 3, 2, 1, 1], ukulele: [2, 0, 1, 0], bass: [1, 3, 3, 2] },
+          { name: 'Bb', label: 'Bb Major', guitar: [-1, 1, 3, 3, 3, 1], ukulele: [3, 2, 1, 1], bass: [-1, 1, 3, 3] },
+          { name: 'C7', label: 'C Dom 7', guitar: [-1, 3, 2, 3, 1, 0], ukulele: [0, 0, 0, 1], bass: [-1, 3, 2, 3] },
+          { name: 'Dm', label: 'D Minor', guitar: [-1, -1, 0, 2, 3, 1], ukulele: [2, 2, 1, 0], bass: [-1, 5, 7, 7] },
+          { name: 'Gm', label: 'G Minor', guitar: [3, 5, 5, 3, 3, 3], ukulele: [0, 2, 3, 1], bass: [3, 5, 5, 3] },
+          { name: 'A7', label: 'A Dom 7', guitar: [-1, 0, 2, 0, 2, 0], ukulele: [0, 1, 0, 0], bass: [-1, 0, 2, 0] }
+        ]
+      }
+    };
+
+    let activeChordIndex = 0; // index of currently selected chord in Key list
+
+    // Audio Initialization
+    function initializeAudio() {
+      if (audioContextInitialized) return;
+      
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContext();
+      
+      masterVolumeNode = audioCtx.createGain();
+      masterVolumeNode.gain.setValueAtTime(0.7, audioCtx.currentTime);
+      masterVolumeNode.connect(audioCtx.destination);
+      
+      audioContextInitialized = true;
+      
+      // Hide enter splash screen
+      document.getElementById('welcome-overlay').classList.add('hidden');
+      
+      // Setup Initial Instrument State
+      setInstrument(activeInstrument);
+    }
+
+    function updateVolume(val) {
+      if (masterVolumeNode && audioCtx) {
+        masterVolumeNode.gain.setValueAtTime(parseFloat(val), audioCtx.currentTime);
+      }
+    }
+
+    // Instrument Swap Manager
+    function setInstrument(instrument) {
+      activeInstrument = instrument;
+      
+      // Highlight Button selector
+      document.getElementById('btn-guitar').className = (instrument === 'guitar') ? "px-3 py-1.5 rounded-md font-semibold transition-all duration-300 bg-amber-700 text-white shadow-md" : "px-3 py-1.5 rounded-md font-semibold transition-all duration-300 text-amber-300 hover:text-white";
+      document.getElementById('btn-ukulele').className = (instrument === 'ukulele') ? "px-3 py-1.5 rounded-md font-semibold transition-all duration-300 bg-amber-700 text-white shadow-md" : "px-3 py-1.5 rounded-md font-semibold transition-all duration-300 text-amber-300 hover:text-white";
+      document.getElementById('btn-bass').className = (instrument === 'bass') ? "px-3 py-1.5 rounded-md font-semibold transition-all duration-300 bg-amber-700 text-white shadow-md" : "px-3 py-1.5 rounded-md font-semibold transition-all duration-300 text-amber-300 hover:text-white";
+      
+      // Set active frets to match the currently selected chord for this new instrument
+      resetFretsToChord();
+
+      // Render updated UI
+      renderChordPads();
+      renderFretboard();
+      renderPhysicalStrings();
+    }
+
+    // Mode Swap Manager (Chord buttons vs Custom Fretboard)
+    function setViewMode(mode) {
+      currentViewMode = mode;
+      
+      const chordBtn = document.getElementById('btn-mode-chords');
+      const fretboardBtn = document.getElementById('btn-mode-fretboard');
+      
+      if (mode === 'chords') {
+        chordBtn.className = "px-3 py-1.5 rounded-md font-semibold transition-all duration-300 bg-amber-800 text-white flex items-center gap-1";
+        fretboardBtn.className = "px-3 py-1.5 rounded-md font-semibold transition-all duration-300 text-amber-300 hover:text-white flex items-center gap-1";
+        
+        document.getElementById('chord-pad-container').classList.remove('hidden');
+        document.getElementById('chord-pad-container').classList.add('flex');
+        document.getElementById('fretboard-container').classList.add('hidden');
+        document.getElementById('fretboard-container').classList.remove('flex');
+        
+        // Return to standard key/chord voicing fretting automatically
+        resetFretsToChord();
+      } else {
+        chordBtn.className = "px-3 py-1.5 rounded-md font-semibold transition-all duration-300 text-amber-300 hover:text-white flex items-center gap-1";
+        fretboardBtn.className = "px-3 py-1.5 rounded-md font-semibold transition-all duration-300 bg-amber-800 text-white flex items-center gap-1";
+        
+        document.getElementById('chord-pad-container').classList.add('hidden');
+        document.getElementById('chord-pad-container').classList.remove('flex');
+        document.getElementById('fretboard-container').classList.remove('hidden');
+        document.getElementById('fretboard-container').classList.add('flex');
+      }
+      
+      renderFretboard();
+      renderPhysicalStrings();
+    }
+
+    // Change Tuning Master Key
+    function changeTuningKey(key) {
+      currentTuningKey = key;
+      activeChordIndex = 0; // Default back to index 0 on key change
+      resetFretsToChord();
+      renderChordPads();
+      renderFretboard();
+      renderPhysicalStrings();
+    }
+
+    // Reset frets back to active chord fingering
+    function resetFretsToChord() {
+      const activeChordList = keyChordPacks[currentTuningKey].chords;
+      const currentChordObj = activeChordList[activeChordIndex];
+      if (currentChordObj && currentChordObj[activeInstrument]) {
+        // Copy the fingering array
+        activeFrets = [...currentChordObj[activeInstrument]];
+      } else {
+        // Fallback open tuning
+        const len = instrumentTunings[activeInstrument].length;
+        activeFrets = Array(len).fill(0);
+      }
+      updateActiveChordFingeringDisplay();
+    }
+
+    // Manual Fret interaction handler
+    function setManualFret(stringIndex, fretIndex) {
+      if (currentViewMode !== 'fretboard') {
+        // Auto-switch to fretboard view mode to allow manual changes
+        setViewMode('fretboard');
+      }
+
+      // Toggle fret logic: if already tapped, make open (0). If open and tapped, hold fret.
+      if (activeFrets[stringIndex] === fretIndex) {
+        activeFrets[stringIndex] = 0; // Toggle to open string
+      } else {
+        activeFrets[stringIndex] = fretIndex;
+      }
+      
+      // Update displays
+      updateActiveChordFingeringDisplay();
+      renderFretboard();
+      renderPhysicalStrings();
+      
+      // Play note immediately to hear feedback
+      playIndividualString(stringIndex);
+    }
+
+    // Clear all manual frets (Set all strings back to open - 0)
+    function clearAllFrets() {
+      const numStrings = instrumentTunings[activeInstrument].length;
+      activeFrets = Array(numStrings).fill(0);
+      updateActiveChordFingeringDisplay();
+      renderFretboard();
+      renderPhysicalStrings();
+    }
+
+    // Total master Reset
+    function resetAll() {
+      changeTuningKey('C');
+      setViewMode('chords');
+      setInstrument('guitar');
+    }
+
+    // Update the visual representation of custom chord fingerings at bottom left
+    function updateActiveChordFingeringDisplay() {
+      const parentEl = document.getElementById('fingering-display');
+      const chordNameEl = document.getElementById('active-chord-name');
+      
+      if (currentViewMode === 'chords') {
+        const activeChordList = keyChordPacks[currentTuningKey].chords;
+        const currentChordObj = activeChordList[activeChordIndex];
+        chordNameEl.innerText = `${currentChordObj.label}`;
+      } else {
+        chordNameEl.innerText = 'Custom Fingerings';
+      }
+
+      // Map string values to custom tags (reverse index so visually correct: bottom string high e first, or just high-low label)
+      let indicators = [];
+      // Let's print left to right matching String low (e.g. 6) to high (e.g. 1)
+      const numStrings = activeFrets.length;
+      for (let i = 0; i < numStrings; i++) {
+        let f = activeFrets[i];
+        indicators.push(f === -1 ? '❌' : f);
+      }
+      
+      parentEl.innerHTML = indicators.map((f, idx) => `
+        <div class="flex flex-col items-center">
+          <span class="text-[9px] text-amber-500 font-bold mb-0.5">S${numStrings - idx}</span>
+          <span class="bg-black text-amber-200 px-1.5 py-0.5 rounded font-bold">${f}</span>
+        </div>
+      `).join('');
+    }
+
+    // Select specific chord preset
+    function selectChord(index) {
+      activeChordIndex = index;
+      resetFretsToChord();
+      renderChordPads();
+      renderFretboard();
+      renderPhysicalStrings();
+    }
+
+    // Render CHORD BUTTONS dynamically
+    function renderChordPads() {
+      const grid = document.getElementById('chord-grid');
+      grid.innerHTML = '';
+      
+      const chordList = keyChordPacks[currentTuningKey].chords;
+      chordList.forEach((chord, index) => {
+        const isActive = (index === activeChordIndex && currentViewMode === 'chords');
+        
+        const btn = document.createElement('button');
+        btn.className = `p-3 rounded-xl border flex flex-col justify-between items-center transition-all duration-200 active:scale-95 ${
+          isActive 
+          ? 'bg-gradient-to-br from-amber-700 to-amber-900 border-amber-400 text-white shadow-lg shadow-amber-950/80 glow-orange' 
+          : 'bg-black/40 hover:bg-amber-950/20 border-amber-950/70 text-amber-200 hover:text-white'
+        }`;
+        
+        // On click, select chord
+        btn.onclick = () => {
+          setViewMode('chords');
+          selectChord(index);
+        };
+
+        // Render mini preview of chords finger dots
+        const stringCount = chord[activeInstrument].length;
+        let miniDots = chord[activeInstrument].map(val => {
+          if (val === -1) return '×';
+          if (val === 0) return '○';
+          return val;
+        }).join(' ');
+
+        btn.innerHTML = `
+          <div class="text-base md:text-lg font-bold tracking-wider">${chord.name}</div>
+          <div class="text-[10px] text-amber-400/90 font-medium">${chord.label}</div>
+          <div class="text-[9px] font-mono tracking-wider mt-2 px-1 py-0.5 bg-black/40 rounded text-amber-300 border border-amber-900/10">${miniDots}</div>
+        `;
+        
+        grid.appendChild(btn);
+      });
+    }
+
+    // Render FRETBOARD (interactive tap frets)
+    function renderFretboard() {
+      const nutIndicators = document.getElementById('nut-string-indicators');
+      const fretsContainer = document.getElementById('frets-columns-container');
+      
+      nutIndicators.innerHTML = '';
+      fretsContainer.innerHTML = '';
+
+      const tuning = instrumentTunings[activeInstrument];
+      const numStrings = tuning.length;
+
+      // Render NUT (Zero Fret open/mute selector)
+      // Loop from high index to low (low-frequency string 6 to high 1)
+      for (let s = 0; s < numStrings; s++) {
+        const isOpen = activeFrets[s] === 0;
+        const isMuted = activeFrets[s] === -1;
+        
+        const ind = document.createElement('button');
+        ind.className = `w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center transition-all border ${
+          isOpen 
+          ? 'bg-amber-500 text-black border-amber-300 shadow-md' 
+          : isMuted 
+            ? 'bg-red-950 text-red-300 border-red-700/50' 
+            : 'bg-black/60 text-amber-500/50 border-amber-950 hover:bg-black/80'
+        }`;
+        
+        ind.innerHTML = isOpen ? '0' : 'M';
+        ind.title = `Toggle String ${numStrings - s} Open/Muted`;
+        ind.onclick = () => {
+          if (isOpen) {
+            setManualFret(s, -1); // Mute
+          } else {
+            setManualFret(s, 0);  // Clear back to open
+          }
+        };
+
+        nutIndicators.appendChild(ind);
+      }
+
+      // Generate 12 frets
+      for (let f = 1; f <= 12; f++) {
+        const fretCol = document.createElement('div');
+        // Frets get slightly narrower higher up (physics of instruments)
+        const widthClass = `w-[${Math.max(30, 70 - f * 3)}px]`;
+        fretCol.className = `flex flex-col justify-around py-2 border-r border-amber-400/30 shrink-0 relative px-1`;
+        fretCol.style.width = `${Math.max(40, 75 - f * 2.5)}px`;
+
+        // Decorative Fret Marker Inlays (commonly on frets 3, 5, 7, 9, 12)
+        const markerFrets = [3, 5, 7, 9, 12];
+        if (markerFrets.includes(f)) {
+          const marker = document.createElement('div');
+          if (f === 12) {
+            // Double dots for octave
+            marker.className = "absolute inset-y-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-3 pointer-events-none z-0";
+            marker.innerHTML = `
+              <div class="w-2.5 h-2.5 rounded-full bg-amber-200/40 shadow-inner"></div>
+              <div class="w-2.5 h-2.5 rounded-full bg-amber-200/40 shadow-inner"></div>
+            `;
+          } else {
+            marker.className = "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-amber-200/40 pointer-events-none z-0";
+          }
+          fretCol.appendChild(marker);
+        }
+
+        // Add note selectors for each string on this fret
+        for (let s = 0; s < numStrings; s++) {
+          const isActive = activeFrets[s] === f;
+          
+          const noteNode = document.createElement('button');
+          noteNode.className = `w-7 h-7 rounded-full text-[10px] font-bold z-10 mx-auto border transition-all flex items-center justify-center ${
+            isActive 
+            ? 'bg-amber-500 text-black border-amber-300 font-extrabold scale-110 shadow-lg shadow-amber-950' 
+            : 'bg-black/30 hover:bg-amber-900/40 text-amber-200/60 border-amber-900/10 hover:text-white'
+          }`;
+          
+          // Show Fret Number
+          noteNode.innerText = f;
+          noteNode.onclick = () => setManualFret(s, f);
+          
+          fretCol.appendChild(noteNode);
+        }
+
+        fretsContainer.appendChild(fretCol);
+      }
+    }
+
+    // Render STRINGS & Fret Indicators on the Strum Area
+    function renderPhysicalStrings() {
+      const container = document.getElementById('physical-strings-container');
+      container.innerHTML = '';
+      
+      const tuning = instrumentTunings[activeInstrument];
+      const numStrings = tuning.length;
+
+      // Render actual vertical strings
+      tuning.forEach((stringData, s) => {
+        const activeFret = activeFrets[s];
+        
+        // String visual thickness proportional to its low frequency pitch
+        const thickness = activeInstrument === 'bass' 
+          ? Math.max(3, 8 - s * 1.5) 
+          : Math.max(1.5, 4.5 - s * 0.6);
+
+        const isMuted = activeFret === -1;
+
+        const stringOuter = document.createElement('div');
+        stringOuter.className = "h-full flex flex-col justify-between items-center relative group";
+        stringOuter.style.width = "40px"; // Tap target helper spacing
+
+        // Live string body line with glowing background
+        const line = document.createElement('div');
+        line.id = `string-line-${s}`;
+        line.className = `absolute h-full transition-all duration-150 rounded ${
+          isMuted ? 'opacity-30' : ''
+        }`;
+        line.style.width = `${thickness}px`;
+        
+        // Beautiful metallic silver/bronze gradient string visual
+        line.style.background = activeInstrument === 'bass'
+          ? 'linear-gradient(90deg, #d4d4d8 0%, #a1a1aa 50%, #71717a 100%)' // Bass steel nickel
+          : s >= (numStrings - 2) 
+            ? 'linear-gradient(90deg, #fef08a 0%, #ca8a04 50%, #854d0e 100%)' // high string bronze
+            : 'linear-gradient(90deg, #e4e4e7 0%, #a1a1aa 50%, #52525b 100%)'; // low string wound steel
+
+        // Decorative fret indicator overlay near high strum section
+        const statusBox = document.createElement('div');
+        statusBox.className = "absolute bottom-1 bg-black/80 px-1.5 py-0.5 rounded text-[9px] font-bold text-amber-300 select-none z-10 pointer-events-none shadow-md border border-amber-900/30";
+        statusBox.innerHTML = isMuted 
+          ? '<span class="text-red-500">M</span>' 
+          : activeFret === 0 ? 'Open' : `Fr ${activeFret}`;
+
+        stringOuter.appendChild(line);
+        stringOuter.appendChild(statusBox);
+        container.appendChild(stringOuter);
+      });
+    }
+
+    // --- STRUMMING & AUDIO GENERATION ---
+
+    // Get the dynamic calculated sound frequency based on string index & fret index
+    function getModifiedPitch(stringIndex) {
+      const tuning = instrumentTunings[activeInstrument];
+      const stringBase = tuning[stringIndex];
+      const activeFret = activeFrets[stringIndex];
+
+      if (!stringBase || activeFret === -1) return 0; // Muted
+
+      // Pitch calculation formula: f_modified = f_open * 2^(fret/12)
+      return stringBase.freq * Math.pow(2, activeFret / 12);
+    }
+
+    // Audio Engine: Synth string resonance pluck sound
+    function playStringSound(stringIndex) {
+      if (!audioCtx) return;
+      
+      const frequency = getModifiedPitch(stringIndex);
+      if (frequency === 0) {
+        // String is muted: Play a soft percussive tap transient sound instead
+        playMutedThud(stringIndex);
+        return;
+      }
+
+      const now = audioCtx.currentTime;
+      // Tailor decaying acoustics based on instrument character
+      const duration = activeInstrument === 'bass' ? 2.5 : activeInstrument === 'ukulele' ? 1.3 : 2.0;
+
+      // Oscillators (harmonic structure)
+      const osc = audioCtx.createOscillator();
+      const subOsc = audioCtx.createOscillator();
+      
+      // Node chain controls
+      const filter = audioCtx.createBiquadFilter();
+      const gainNode = audioCtx.createGain();
+      const subGain = audioCtx.createGain();
+
+      // Pluck strike noise burst (highly realistic tactile transient)
+      const noiseNode = audioCtx.createBufferSource();
+      const noiseGain = audioCtx.createGain();
+
+      // Instrument-specific parameters
+      if (activeInstrument === 'bass') {
+        osc.type = 'sine';
+        subOsc.type = 'triangle';
+        osc.frequency.setValueAtTime(frequency, now);
+        subOsc.frequency.setValueAtTime(frequency * 2, now); // Double frequency for harmonic grit
+      } else if (activeInstrument === 'ukulele') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(frequency, now);
+      } else {
+        // Guitar - Warm triangle / saw hybrid approximation
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(frequency, now);
+        
+        // Slight sub oscillator warmth for low E, A, D strings
+        if (frequency < 160) {
+          subOsc.type = 'sine';
+          subOsc.frequency.setValueAtTime(frequency * 0.5, now);
+        }
+      }
+
+      // Fast slight pitch envelope glide (plucking transient physical string stretch)
+      osc.frequency.exponentialRampToValueAtTime(frequency * 1.012, now + 0.008);
+      osc.frequency.exponentialRampToValueAtTime(frequency, now + 0.07);
+
+      // Noise buffer strike transient creation
+      const bufferSize = audioCtx.sampleRate * 0.04; // 40ms noise burst
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      noiseNode.buffer = buffer;
+
+      // Filter settings (Lowpass sweeps down to emulate string damping high frequency decay)
+      filter.type = 'lowpass';
+      const startFreq = activeInstrument === 'bass' ? 600 : activeInstrument === 'ukulele' ? 4500 : 3200;
+      const endFreq = activeInstrument === 'bass' ? 65 : activeInstrument === 'ukulele' ? 400 : 220;
+      filter.frequency.setValueAtTime(startFreq, now);
+      filter.frequency.exponentialRampToValueAtTime(endFreq, now + duration);
+      filter.Q.setValueAtTime(activeInstrument === 'bass' ? 3.0 : 1.8, now);
+
+      // Master Envelope shaping (ADSR simulation)
+      gainNode.gain.setValueAtTime(0, now);
+      gainNode.gain.linearRampToValueAtTime(activeInstrument === 'bass' ? 0.65 : 0.45, now + 0.004); // Instant clean rise
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      // Sub warm frequency gain control
+      subGain.gain.setValueAtTime(0, now);
+      if (activeInstrument === 'bass') {
+        subGain.gain.linearRampToValueAtTime(0.35, now + 0.01);
+        subGain.gain.exponentialRampToValueAtTime(0.0001, now + duration * 1.15);
+      } else if (activeInstrument === 'guitar' && frequency < 160) {
+        subGain.gain.linearRampToValueAtTime(0.12, now + 0.01);
+        subGain.gain.exponentialRampToValueAtTime(0.0001, now + duration * 0.85);
+      }
+
+      // Noise pluck attack filter & gain configuration
+      const noiseFilter = audioCtx.createBiquadFilter();
+      noiseFilter.type = 'highpass';
+      noiseFilter.frequency.setValueAtTime(1200, now);
+
+      noiseGain.gain.setValueAtTime(0, now);
+      noiseGain.gain.linearRampToValueAtTime(activeInstrument === 'ukulele' ? 0.35 : 0.25, now + 0.002);
+      noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
+
+      // Node connection routes
+      osc.connect(filter);
+      filter.connect(gainNode);
+
+      if (activeInstrument === 'bass' || (activeInstrument === 'guitar' && frequency < 160)) {
+        subOsc.connect(subGain);
+        subGain.connect(masterVolumeNode);
+      }
+
+      noiseNode.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+
+      gainNode.connect(masterVolumeNode);
+      noiseGain.connect(masterVolumeNode);
+
+      // Clean delay loop echo effect
+      const echoDelay = audioCtx.createDelay();
+      echoDelay.delayTime.value = activeInstrument === 'bass' ? 0.15 : 0.18;
+      
+      const echoFeedback = audioCtx.createGain();
+      echoFeedback.gain.value = activeInstrument === 'bass' ? 0.04 : 0.14; // Less slap delay on bass frequencies
+
+      masterVolumeNode.connect(echoDelay);
+      echoDelay.connect(echoFeedback);
+      echoFeedback.connect(audioCtx.destination);
+      echoFeedback.connect(echoDelay); // Echo feedback loop path
+
+      // Trigger Nodes
+      osc.start(now);
+      if (activeInstrument === 'bass' || (activeInstrument === 'guitar' && frequency < 160)) {
+        subOsc.start(now);
+        subOsc.stop(now + duration + 0.05);
+      }
+      noiseNode.start(now);
+      
+      osc.stop(now + duration + 0.05);
+      noiseNode.stop(now + 0.045);
+
+      // Trigger CSS visualization vibration wave
+      vibrateStringVisual(stringIndex);
+    }
+
+    // Play a muted string "thud"
+    function playMutedThud(stringIndex) {
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+
+      osc.type = 'triangle';
+      // Low base thud
+      const targetBase = instrumentTunings[activeInstrument][stringIndex].freq;
+      osc.frequency.setValueAtTime(targetBase, now);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(150, now);
+
+      gainNode.gain.setValueAtTime(0, now);
+      gainNode.gain.linearRampToValueAtTime(0.15, now + 0.002);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+
+      osc.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(masterVolumeNode);
+
+      osc.start(now);
+      osc.stop(now + 0.1);
+
+      vibrateStringVisual(stringIndex, 0.2); // Smaller wiggle
+    }
+
+    // Animate visual string
+    function vibrateStringVisual(stringIndex, amplitudeMultiplier = 1) {
+      const line = document.getElementById(`string-line-${stringIndex}`);
+      if (!line) return;
+      
+      // Force layout recalculation to restart CSS animations reliably
+      line.classList.remove('vibrating');
+      void line.offsetWidth;
+      line.classList.add('vibrating');
+      
+      // Temporary neon orange pluck glow
+      line.style.boxShadow = `0 0 14px rgba(245, 158, 11, ${amplitudeMultiplier})`;
+      setTimeout(() => {
+        line.style.boxShadow = 'none';
+      }, 500);
+    }
+
+    // Play single picked note manually
+    function playIndividualString(stringIdx) {
+      // Lazy init audio context if needed
+      if (!audioCtx) {
+        initializeAudio();
+      }
+      playStringSound(stringIdx);
+    }
+
+    // --- PHYSICAL MOUSE/TOUCH COLLISION DRAG DETECTION (STRUMMING) ---
+    const touchDetector = document.getElementById('touch-detector');
+    let isDrawing = false;
+    let traversedStrings = new Set();
+    let lastX = null;
+
+    // Track move events to trigger plucks
+    function handlePointerStrum(clientX, clientY) {
+      if (!audioCtx && audioContextInitialized) {
+        initializeAudio();
+      }
+
+      const rect = touchDetector.getBoundingClientRect();
+      const relativeX = clientX - rect.left;
+      const relativeY = clientY - rect.top;
+      
+      const width = rect.width;
+      const numStrings = instrumentTunings[activeInstrument].length;
+
+      // Find spatial center of each string strip
+      const paddingLeft = 48; // aligned with 'px-12' classes
+      const paddingRight = 48;
+      const activeWidth = width - paddingLeft - paddingRight;
+      
+      // Track which index is crossed
+      for (let s = 0; s < numStrings; s++) {
+        // String horizontal X coordinates
+        const stringX = paddingLeft + (activeWidth / (numStrings - 1)) * s;
+
+        // Check if cursor passed through string threshold
+        if (lastX !== null) {
+          const crossed = (lastX <= stringX && relativeX >= stringX) || (lastX >= stringX && relativeX <= stringX);
+          if (crossed && !traversedStrings.has(s)) {
+            traversedStrings.add(s);
+            playIndividualString(s);
+          }
+        }
+      }
+
+      lastX = relativeX;
+    }
+
+    // Drag Listener Bindings
+    touchDetector.addEventListener('mousedown', (e) => {
+      isDrawing = true;
+      traversedStrings.clear();
+      const rect = touchDetector.getBoundingClientRect();
+      lastX = e.clientX - rect.left;
+      handlePointerStrum(e.clientX, e.clientY);
+    });
+
+    touchDetector.addEventListener('mousemove', (e) => {
+      if (!isDrawing) return;
+      handlePointerStrum(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDrawing = false;
+      lastX = null;
+      traversedStrings.clear();
+    });
+
+    // Touch Support for mobile
+    touchDetector.addEventListener('touchstart', (e) => {
+      isDrawing = true;
+      traversedStrings.clear();
+      const rect = touchDetector.getBoundingClientRect();
+      const t = e.touches[0];
+      lastX = t.clientX - rect.left;
+      handlePointerStrum(t.clientX, t.clientY);
+    });
+
+    touchDetector.addEventListener('touchmove', (e) => {
+      if (!isDrawing) return;
+      const t = e.touches[0];
+      handlePointerStrum(t.clientX, t.clientY);
+    });
+
+    window.addEventListener('touchend', () => {
+      isDrawing = false;
+      lastX = null;
+      traversedStrings.clear();
+    });
+
+    // Auto strum buttons
+    function autoStrum(downward = true) {
+      if (!audioCtx) initializeAudio();
+      
+      const numStrings = instrumentTunings[activeInstrument].length;
+      
+      for (let i = 0; i < numStrings; i++) {
+        const stringIndex = downward ? i : (numStrings - 1 - i);
+        // Small rolling delay for lush arpeggiator chord voicing effect
+        setTimeout(() => {
+          playIndividualString(stringIndex);
+        }, i * 65);
+      }
+    }
+
+    // Keyboard Shortcuts (Instant numeric string plucking trigger)
+    window.addEventListener('keydown', (e) => {
+      if (['1', '2', '3', '4', '5', '6'].includes(e.key)) {
+        const numIndex = parseInt(e.key) - 1;
+        const total = instrumentTunings[activeInstrument].length;
+        if (numIndex < total) {
+          playIndividualString(numIndex);
+        }
+      }
+    });
+
+    // Modal Control
+    function toggleHelpModal() {
+      const modal = document.getElementById('help-modal');
+      modal.classList.toggle('hidden');
+    }
+
+    // Initial render
+    renderChordPads();
+    renderFretboard();
+    renderPhysicalStrings();
+
+  </script>
+</body>
+</html>

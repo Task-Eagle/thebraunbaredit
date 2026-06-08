@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Braunbär Edit - Virtual Strings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css?family=Raleway:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        :root {
+            --wood-dark: #4A3319;
+            --wood-medium: #8A5E39;
+            --wood-light: #D9A876;
+            --wood-accent: #f5efe6;
+            --fret-gold: #d4af37;
+            --string-silver: #e0e0e0;
+            --font-stack: 'Raleway', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: #1a1108;
+            color: var(--wood-accent);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Control Bar */
+        header {
+            background-color: var(--wood-dark);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--wood-medium);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            z-index: 10;
+        }
+
+        .brand h1 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--wood-light);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        select, button.toggle-btn {
+            background-color: #2d1f10;
+            color: #fff;
+            border: 2px solid var(--wood-medium);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-family: var(--font-stack);
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        select:hover, button.toggle-btn:hover {
+            border-color: var(--wood-light);
+            background-color: var(--wood-medium);
+        }
+
+        button.toggle-btn.active {
+            background-color: var(--wood-light);
+            color: var(--wood-dark);
+            border-color: #fff;
+        }
+
+        /* Main Workspace: Landscape Split Layout */
+        .app-container {
+            flex: 1;
+            display: flex;
+            position: relative;
+            background: linear-gradient(135deg, #36220f 0%, #1f1307 100%);
+        }
+
+        /* Left Side: Control Interface (Chord Pads or Fretboard) */
+        .left-panel {
+            width: 45%;
+            border-right: 4px solid #2d1f10;
+            position: relative;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .interface-view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.4s ease-in-out, opacity 0.3s ease;
+            padding: 15px;
+        }
+
+        .chord-pad-view {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .fretboard-view {
+            opacity: 0;
+            transform: translateX(-100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 0;
+            background: linear-gradient(90deg, #2a1a0a, #422a14);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .left-panel.show-fretboard .chord-pad-view {
+            opacity: 0;
+            transform: translateX(100%);
+            pointer-events: none;
+        }
+
+        .left-panel.show-fretboard .fretboard-view {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Chord Buttons */
+        .chord-btn {
+            background: linear-gradient(145deg, #5c3d24, #422a14);
+            border: 2px solid var(--wood-medium);
+            border-radius: 8px;
+            color: var(--wood-accent);
+            font-family: var(--font-stack);
+            font-size: 1.3rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .chord-btn span {
+            font-size: 0.75rem;
+            font-weight: 400;
+            color: var(--wood-light);
+            margin-top: 4px;
+        }
+
+        .chord-btn:active, .chord-btn.active {
+            transform: scale(0.96);
+            background: linear-gradient(145deg, var(--wood-light), var(--wood-medium));
+            color: var(--wood-dark);
+            border-color: #fff;
+            box-shadow: 0 2px 3px rgba(0,0,0,0.4);
+        }
+
+        .chord-btn.active span {
+            color: var(--wood-dark);
+        }
+
+        /* Fretboard CSS Engine */
+        .fret-string-row {
+            flex: 1;
+            display: flex;
+            position: relative;
+            border-bottom: 1px dashed rgba(255,255,255,0.05);
+        }
+
+        .fret-cell {
+            flex: 1;
+            border-right: 2px solid var(--fret-gold);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .fret-cell:first-child {
+            border-right: 4px solid #fff; /* Nut */
+            background-color: rgba(0,0,0,0.3);
+            max-width: 40px;
+        }
+
+        .fret-cell::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--string-silver);
+            opacity: 0.3;
+            z-index: 1;
+        }
+
+        .fret-marker {
+            width: 12px;
+            height: 12px;
+            background-color: var(--wood-accent);
+            border-radius: 50%;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .fret-cell.active-fret {
+            background: rgba(217, 168, 118, 0.2);
+        }
+        
+        .fret-cell.active-fret::before {
+            content: '';
+            width: 14px;
+            height: 14px;
+            background: var(--wood-light);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            z-index: 2;
+        }
+
+        /* Right Side: Strumming / Picking Deck */
+        .right-panel {
+            width: 55%;
+            background: radial-gradient(circle at center, #59391b 0%, #26170a 100%);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 40px 0;
+            box-shadow: inset 20px 0 30px rgba(0,0,0,0.6);
+        }
+
+        /* Sound Hole Visual Asset */
+        .soundhole {
+            position: absolute;
+            top: 50%;
+            left: 20%;
+            transform: translate(-50%, -50%);
+            width: 140px;
+            height: 140px;
+            background-color: #0b0703;
+            border-radius: 50%;
+            border: 6px double var(--wood-medium);
+            box-shadow: inset 0 0 20px #000, 0 0 15px rgba(0,0,0,0.5);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Audio String Track Layout */
+        .string-track {
+            height: 35px;
+            width: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .string-line {
+            width: 100%;
+            background: linear-gradient(to bottom, #ffffff 0%, var(--string-silver) 50%, #888888 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            transition: transform 0.1s ease;
+            pointer-events: none;
+        }
+
+        /* Adjust string thickness dynamically based on tone register */
+        .string-track:nth-child(1) .string-line { height: 4px; }
+        .string-track:nth-child(2) .string-line { height: 3.5px; }
+        .string-track:nth-child(3) .string-line { height: 3px; }
+        .string-track:nth-child(4) .string-line { height: 2.5px; }
+        .string-track:nth-child(5) .string-line { height: 2px; }
+        .string-track:nth-child(6) .string-line { height: 1.5px; }
+
+        .string-track.vibrating .string-line {
+            animation: stringVibrate 0.15s linear infinite;
+        }
+
+        @keyframes stringVibrate {
+            0% { transform: translateY(0); }
+            25% { transform: translateY(-2px); }
+            75% { transform: translateY(2px); }
+            100% { transform: translateY(0); }
+        }
+
+        /* Interactive UI Toast Prompt */
+        .audio-prompt {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(11, 7, 3, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .audio-prompt i {
+            font-size: 4rem;
+            color: var(--wood-light);
+            margin-bottom: 20px;
+        }
+
+        .audio-prompt button {
+            background-color: var(--wood-medium);
+            color: #fff;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            font-family: var(--font-stack);
+        }
+        
+        .audio-prompt button:hover {
+            background-color: var(--wood-light);
+            color: var(--wood-dark);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="audio-prompt" id="audio-prompt">
+        <i class="fas fa-guitar"></i>
+        <h2>The Braunbär Edit — Virtual Instrument</h2>
+        <p>Optimized for Desktop or Mobile Landscape layout.</p>
+        <button id="start-app-btn">Initialize Audio Engine</button>
+    </div>
+
+    <header>
+        <div class="brand">
+            <h1>The Braunbär Edit <span>// Strings</span></h1>
+        </div>
+        <div class="controls">
+            <select id="instrument-select">
+                <option value="guitar">Acoustic Guitar (6-Str)</option>
+                <option value="ukulele">Ukulele (4-Str)</option>
+                <option value="bass">Electric Bass (4-Str)</option>
+            </select>
+            <button class="toggle-btn" id="view-toggle">Switch to Fretboard</button>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <!-- Control Panel Interface Layout Area -->
+        <div class="left-panel" id="left-panel">
+            
+            <!-- Default Matrix View: Chord Blocks Selection -->
+            <div class="interface-view chord-pad-view" id="chord-pad-container">
+                <!-- Populated via Object Maps programmatically -->
+            </div>
+
+            <!-- Alternate Matrix View: Visual Dynamic Frets -->
+            <div class="interface-view fretboard-view" id="fretboard-container">
+                <!-- Populated dynamically via selected instrument setup definition loops -->
+            </div>
+
+        </div>
+
+        <!-- Audio Strum Execution Surface Area -->
+        <div class="right-panel" id="right-panel">
+            <div class="soundhole" id="soundhole"></div>
+            <!-- Interactive Strings Appended Via Config Engines -->
+        </div>
+    </div>
+
+    <script>
+        // --- INSTRUMENT PRESETS & TUNING ENGINE SYSTEM DESIGN ---
+        const INSTRUMENTS = {
+            guitar: {
+                strings: [82.41, 110.00, 146.83, 196.00, 246.94, 329.63], // E2, A2, D3, G3, B3, E4
+                labels: ['E', 'A', 'D', 'G', 'B', 'e'],
+                chords: {
+                    'C':   [0, 3, 2, 0, 1, 0],
+                    'F':   [1, 3, 3, 2, 1, 1],
+                    'G7':  [3, 2, 0, 0, 0, 1],
+                    'Am':  [0, 0, 2, 2, 1, 0],
+                    'Dm7': [0, 0, 0, 2, 1, 1],
+                    'E7':  [0, 2, 0, 1, 3, 0]
+                }
+            },
+            ukulele: {
+                strings: [392.00, 261.63, 329.63, 440.00], // G4, C4, E4, A4
+                labels: ['G', 'C', 'E', 'A'],
+                chords: {
+                    'C':   [0, 0, 0, 3],
+                    'F':   [2, 0, 1, 0],
+                    'G7':  [0, 2, 1, 2],
+                    'Am':  [2, 0, 0, 0],
+                    'Dm7': [2, 2, 1, 3],
+                    'E7':  [1, 2, 0, 2]
+                }
+            },
+            bass: {
+                strings: [41.20, 55.00, 73.42, 98.00], // E1, A1, D2, G2
+                labels: ['E', 'A', 'D', 'G'],
+                chords: {
+                    'C':   [8, 10, 10, 9],
+                    'F':   [1, 3, 3, 2],
+                    'G7':  [3, 5, 3, 4],
+                    'Am':  [5, 7, 7, 5],
+                    'Dm7': [10, 12, 10, 10],
+                    'E7':  [0, 2, 0, 1]
+                }
+            }
+        };
+
+        // UI App Global App State Configurations Tracking
+        let currentInstrument = 'guitar';
+        let currentChord = 'C';
+        let isFretboardMode = false;
+        let activeFretboardPositions = []; // Store finger selections during manual fretting mode
+        
+        // Sound Synthesis Pipeline
+        let audioCtx = null;
+
+        // Dom Elements References Locators
+        const audioPrompt = document.getElementById('audio-prompt');
+        const startAppBtn = document.getElementById('start-app-btn');
+        const instrumentSelect = document.getElementById('instrument-select');
+        const viewToggle = document.getElementById('view-toggle');
+        const leftPanel = document.getElementById('left-panel');
+        const chordPadContainer = document.getElementById('chord-pad-container');
+        const fretboardContainer = document.getElementById('fretboard-container');
+        const rightPanel = document.getElementById('right-panel');
+
+        // --- INTERACTIVE SYSTEM EVENT LISTENERS INITIALIZERS ---
+        startAppBtn.addEventListener('click', () => {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            audioPrompt.style.display = 'none';
+        });
+
+        instrumentSelect.addEventListener('change', (e) => {
+            currentInstrument = e.target.value;
+            const instrumentKeys = Object.keys(INSTRUMENTS[currentInstrument].chords);
+            currentChord = instrumentKeys[0];
+            buildInterface();
+        });
+
+        viewToggle.addEventListener('click', () => {
+            isFretboardMode = !isFretboardMode;
+            if (isFretboardMode) {
+                viewToggle.textContent = "Switch to Chord Pads";
+                viewToggle.classList.add('active');
+                leftPanel.classList.add('show-fretboard');
+            } else {
+                viewToggle.textContent = "Switch to Fretboard";
+                viewToggle.classList.remove('active');
+                leftPanel.classList.remove('show-fretboard');
+            }
+        });
+
+        // --- SOUND ENGINE SYNTHESIS SYNTAX RUNTIME ---
+        function playPluckTone(frequency, delaySec = 0) {
+            if (!audioCtx) return;
+
+            // Generate Pluck Synthesis via Karplus-Strong Equivalent Modulated Nodes Pipeline
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            // Warm string timbre emulation configuration using a triangle waveform
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(frequency, audioCtx.currentTime + delaySec);
+
+            // Envelope modeling config rules curves
+            gainNode.gain.setValueAtTime(0.8, audioCtx.currentTime + delaySec);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delaySec + 1.8);
+
+            // Lowpass dynamic filtering logic integration to diminish higher string harmonics smoothly over time
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(800, audioCtx.currentTime + delaySec);
+            filter.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + delaySec + 1.0);
+
+            osc.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            osc.start(audioCtx.currentTime + delaySec);
+            osc.stop(audioCtx.currentTime + delaySec + 1.8);
+        }
+
+        // --- VIEW GENERATOR CONSTRUCTORS DYNAMIC UI BUILDERS ---
+        function buildInterface() {
+            const instData = INSTRUMENTS[currentInstrument];
+            
+            // 1. Generate Chord Matrix Layout Buttons
+            chordPadContainer.innerHTML = '';
+            Object.keys(instData.chords).forEach(chordName => {
+                const btn = document.createElement('button');
+                btn.className = `chord-btn ${chordName === currentChord ? 'active' : ''}`;
+                btn.innerHTML = `${chordName} <span>Pad Active</span>`;
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.chord-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentChord = chordName;
+                });
+                chordPadContainer.appendChild(btn);
+            });
+
+            // 2. Build the Frets Grid Layout Array Matrices
+            fretboardContainer.innerHTML = '';
+            activeFretboardPositions = new Array(instData.strings.length).fill(0); // Clear state config rules tracking arrays
+
+            // Loop reversed to render the lowest frequency thick strings at the bottom row layout stack
+            for (let sIdx = instData.strings.length - 1; sIdx >= 0; sIdx--) {
+                const stringRow = document.createElement('div');
+                stringRow.className = 'fret-string-row';
+
+                // Display 5 frets manually for accessibility on landscape layout screens
+                for (let fretNum = 0; fretNum <= 5; fretNum++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'fret-cell';
+                    if (fretNum === 0) cell.innerHTML = `<span style="font-size:0.7rem;">${instData.labels[sIdx]}</span>`;
+                    
+                    // Center markers layout tracking visual references indices definitions
+                    if (fretNum === 3 && (currentInstrument === 'guitar' || currentInstrument === 'bass')) {
+                        const marker = document.createElement('div');
+                        marker.className = 'fret-marker';
+                        cell.appendChild(marker);
+                    }
+
+                    if (fretNum === activeFretboardPositions[sIdx]) {
+                        cell.classList.add('active-fret');
+                    }
+
+                    cell.addEventListener('click', () => {
+                        stringRow.querySelectorAll('.fret-cell').forEach(c => c.classList.remove('active-fret'));
+                        cell.classList.add('active-fret');
+                        activeFretboardPositions[sIdx] = fretNum;
+                    });
+
+                    stringRow.appendChild(cell);
+                }
+                fretboardContainer.appendChild(stringRow);
+            }
+
+            // 3. Build Interactive Performance String Arrays Tracks
+            rightPanel.innerHTML = '<div class="soundhole" id="soundhole"></div>';
+            
+            // Soundhole repositioning relative layout constraints
+            const hole = rightPanel.querySelector('.soundhole');
+            if (currentInstrument === 'ukulele' || currentInstrument === 'bass') {
+                hole.style.width = '110px';
+                hole.style.height = '110px';
+            }
+
+            instData.strings.forEach((baseFreq, idx) => {
+                const track = document.createElement('div');
+                track.className = 'string-track';
+                track.dataset.stringIndex = idx;
+
+                const line = document.createElement('div');
+                line.className = 'string-line';
+                track.appendChild(line);
+
+                // Individual string picking handler via click or point touch
+                track.addEventListener('mouseenter', () => triggerStringPlay(idx, track));
+                track.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    triggerStringPlay(idx, track);
+                });
+
+                rightPanel.appendChild(track);
+            });
+        }
+
+        // --- STRUM ANALYSIS RUNTIME ENGINE ROUTER ---
+        function triggerStringPlay(stringIdx, element) {
+            const instData = INSTRUMENTS[currentInstrument];
+            const baseFrequency = instData.strings[stringIdx];
+            let targetFrequency = baseFrequency;
+
+            if (isFretboardMode) {
+                // Calculate manual fret shift scaling engine mathematical formula rule
+                const currentFretOffset = activeFretboardPositions[stringIdx] || 0;
+                targetFrequency = baseFrequency * Math.pow(2, currentFretOffset / 12);
+            } else {
+                // Access chord mapping array offsets values data maps
+                const chordFretOffsets = instData.chords[currentChord];
+                const individualOffsetFret = chordFretOffsets[stringIdx];
+                
+                if (individualOffsetFret === -1) return; // Muted string check logic rule validation block bypass boundary tracking loop
+                targetFrequency = baseFrequency * Math.pow(2, individualOffsetFret / 12);
+            }
+
+            // Visual tracking animation trigger initialization code updates
+            element.classList.remove('vibrating');
+            void element.offsetWidth; // Reflow reset hack trigger for CSS animations keyframe arrays
+            element.classList.add('vibrating');
+            setTimeout(() => element.classList.remove('vibrating'), 400);
+
+            playPluckTone(targetFrequency);
+        }
+
+        // Initialize Runtime Engine Startup Framework UI Arrays 
+        buildInterface();
+    </script>
+</body>
+</html>
