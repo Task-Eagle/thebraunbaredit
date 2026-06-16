@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BRAUNBÄR - Dashboard -</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#fdfcfb',
+                            100: '#f5efe6', // Accent
+                            200: '#e9dfcc',
+                            300: '#d9a876', // Secondary
+                            400: '#bfa083',
+                            500: '#8a5e39', // Primary
+                            600: '#764e2e',
+                            700: '#624025',
+                            800: '#4e321d',
+                            900: '#3a2414',
+                        },
+                        secondary: '#D9A876',
+                        accent: '#f5efe6',
+                        darkText: '#463f2f',
+                        lightBg: '#FFFFFF',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #463f2f; /* darkText color */
+            transition: background-color 0.3s, color 0.3s;
+        }
+        /* Focus styles matching exact requirements */
+        input:focus, select:focus, textarea:focus, button:focus-visible {
+            outline: 3px solid #E76F51 !important;
+            outline-offset: 1px;
+        }
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(138, 94, 57, 0.3);
+            border-radius: 20px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(217, 168, 118, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 min-h-screen flex flex-col md:flex-row">
+
+    <!-- Toast Notification System -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Alarm / Reminder Overlay -->
+    <div id="reminder-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-primary-100 dark:border-gray-700 transform scale-95 transition-all duration-300" id="reminder-modal-content">
+            <div class="flex items-center justify-center w-16 h-16 bg-primary-100 dark:bg-primary-900/50 rounded-full mx-auto mb-4 animate-bounce">
+                <i data-lucide="bell-ring" class="w-8 h-8 text-primary-600 dark:text-primary-400"></i>
+            </div>
+            <h3 class="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">Reminder Alert!</h3>
+            <div class="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl mb-6">
+                <h4 id="reminder-title" class="font-semibold text-primary-700 dark:text-primary-300 mb-1 text-center"></h4>
+                <p id="reminder-desc" class="text-sm text-gray-600 dark:text-gray-400 text-center custom-scrollbar max-h-24 overflow-y-auto"></p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="dismissReminder()" class="flex-1 py-3 px-4 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold rounded-xl transition duration-150">
+                    Snooze (5m)
+                </button>
+                <button onclick="acknowledgeReminder()" class="flex-1 py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl transition duration-150 shadow-lg shadow-primary-500/20">
+                    Acknowledge
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-full md:w-64 bg-white dark:bg-gray-800 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 flex flex-col flex-shrink-0">
+        <!-- Logo & Branding -->
+        <div class="p-6 flex items-center justify-between border-b border-gray-100 dark:border-gray-700">
+            <div class="flex items-center gap-3">
+                <div class="bg-primary-600 p-2.5 rounded-xl shadow-lg shadow-primary-500/30">
+                    <i data-lucide="brain-circuit" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-none tracking-tight">BRAUNBÄR - Dashboard</h1>
+                    <span class="text-xs text-gray-400 dark:text-gray-500">Productivity Workspace</span>
+                </div>
+            </div>
+            <!-- Theme Toggle Mobile -->
+            <button onclick="toggleDarkMode()" class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                <i id="theme-icon-mobile" data-lucide="moon" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- Google Cloud Auth Sync Banner -->
+        <div class="p-4 border-b border-gray-100 dark:border-gray-700 bg-primary-50/50 dark:bg-gray-900/30">
+            <div id="auth-status-loading" class="flex items-center gap-3 py-2 text-xs text-gray-500">
+                <div class="w-4 h-4 rounded-full border-2 border-primary-500 border-t-transparent animate-spin"></div>
+                Checking sync status...
+            </div>
+            
+            <div id="auth-status-logged-out" class="hidden space-y-2.5">
+                <div class="flex items-start gap-2.5">
+                    <i data-lucide="cloud-off" class="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5"></i>
+                    <p class="text-[11px] leading-tight text-gray-500 dark:text-gray-400">
+                        <strong>Local Only Mode</strong>. Log in with Google to enable cross-device database synchronization.
+                    </p>
+                </div>
+                <button id="btn-login-google" class="w-full py-2 px-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl text-xs transition duration-150 flex items-center justify-center gap-2 shadow shadow-primary-500/10">
+                    <i data-lucide="log-in" class="w-3.5 h-3.5"></i>
+                    Sync with Google
+                </button>
+            </div>
+
+            <div id="auth-status-logged-in" class="hidden space-y-3">
+                <div class="flex items-center gap-2.5">
+                    <img id="auth-user-avatar" class="w-8 h-8 rounded-full border border-primary-300 shadow-sm" src="" alt="avatar">
+                    <div class="min-w-0 flex-1">
+                        <p id="auth-user-name" class="text-xs font-bold text-gray-900 dark:text-white truncate">User</p>
+                        <p class="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-semibold">
+                            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span> Cloud Sync Active
+                        </p>
+                    </div>
+                </div>
+                <button id="btn-logout-google" class="w-full py-1.5 px-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-lg text-[10px] uppercase tracking-wider transition duration-150 flex items-center justify-center gap-1.5">
+                    <i data-lucide="log-out" class="w-3 h-3"></i>
+                    Disconnect
+                </button>
+            </div>
+        </div>
+
+        <!-- Navigation Menus -->
+        <nav class="flex-1 p-4 space-y-1">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition duration-150 text-left bg-primary-50 text-primary-600 dark:bg-primary-950/40 dark:text-primary-400">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                Dashboard
+            </button>
+            <button onclick="switchTab('notes')" id="nav-notes" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition duration-150 text-left text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <i data-lucide="file-text" class="w-5 h-5"></i>
+                My Notes
+            </button>
+            <button onclick="switchTab('tasks')" id="nav-tasks" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition duration-150 text-left text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <i data-lucide="check-square" class="w-5 h-5"></i>
+                Task Checklist
+            </button>
+            <button onclick="switchTab('calendar')" id="nav-calendar" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition duration-150 text-left text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <i data-lucide="calendar" class="w-5 h-5"></i>
+                Calendar & Schedule
+            </button>
+        </nav>
+
+        <!-- Quick Info / Storage & Dark Mode -->
+        <div class="p-4 border-t border-gray-100 dark:border-gray-700 space-y-4">
+            <div class="hidden md:flex items-center justify-between px-2 text-sm text-gray-500 dark:text-gray-400">
+                <span>Dark Mode</span>
+                <button onclick="toggleDarkMode()" class="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition">
+                    <i id="theme-icon-desktop" data-lucide="moon" class="w-4 h-4"></i>
+                </button>
+            </div>
+            
+            <div class="bg-gray-50 dark:bg-gray-900/50 p-3.5 rounded-xl text-xs space-y-2">
+                <div class="flex justify-between font-semibold text-gray-600 dark:text-gray-400">
+                    <span id="storage-type-label">Local Storage</span>
+                    <span id="storage-percent">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                    <div id="storage-progress" class="bg-primary-500 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <p id="storage-hint-text" class="text-[10px] text-gray-400 dark:text-gray-500">Syncs automatically with browser session.</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        <!-- Header -->
+        <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 py-4 px-6 md:px-8 flex items-center justify-between">
+            <div>
+                <h2 id="current-page-title" class="text-xl font-bold text-gray-900 dark:text-white">Dashboard Overview</h2>
+                <p id="current-date-subtitle" class="text-xs text-gray-500 dark:text-gray-400 mt-1"></p>
+            </div>
+            
+            <!-- Quick Add Shortcut Button -->
+            <div class="flex items-center gap-3">
+                <button onclick="quickAddNote()" class="flex items-center gap-2 px-3.5 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-xl transition duration-150 shadow-md shadow-primary-500/10">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">New Note</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Dynamic Workspace Content -->
+        <div class="flex-1 p-6 md:p-8">
+
+            <!-- 1. DASHBOARD TAB -->
+            <section id="tab-dashboard" class="space-y-6">
+                <!-- Welcome Card -->
+                <div class="bg-gradient-to-r from-primary-600 to-amber-700 rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                    <div class="space-y-2">
+                        <h3 class="text-2xl font-bold">Hello Productivity Companion! 👋</h3>
+                        <p class="text-primary-100 text-sm max-w-xl">Organize your thoughts, plan with confidence, schedule reminders, and complete checklists - securely synced with you google account.</p>
+                    </div>
+                    <div class="flex gap-4 self-stretch md:self-auto justify-between border-t border-white/10 pt-4 md:border-0 md:pt-0">
+                        <div class="text-center px-4">
+                            <span id="stat-notes" class="block text-2xl font-bold">0</span>
+                            <span class="text-xs text-primary-200">Total Notes</span>
+                        </div>
+                        <div class="text-center border-x border-white/20 px-4">
+                            <span id="stat-tasks" class="block text-2xl font-bold">0</span>
+                            <span class="text-xs text-primary-200">Open Tasks</span>
+                        </div>
+                        <div class="text-center px-4">
+                            <span id="stat-reminders" class="block text-2xl font-bold">0</span>
+                            <span class="text-xs text-primary-200">Active Alarms</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Column 1: Recent Notes -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col h-[400px]">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                <i data-lucide="file-text" class="w-5 h-5 text-amber-600"></i> Recent Notes
+                            </h4>
+                            <button onclick="switchTab('notes')" class="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline">View All</button>
+                        </div>
+                        <div id="dash-recent-notes" class="flex-1 space-y-3 overflow-y-auto custom-scrollbar pr-1">
+                            <!-- Populated Dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Impending Tasks Checklist -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col h-[400px]">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                <i data-lucide="check-square" class="w-5 h-5 text-emerald-600"></i> Next Tasks
+                            </h4>
+                            <button onclick="switchTab('tasks')" class="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline">Manage Tasks</button>
+                        </div>
+                        <div id="dash-tasks" class="flex-1 space-y-3 overflow-y-auto custom-scrollbar pr-1">
+                            <!-- Populated Dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Column 3: Alarms & Quick-Add -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col h-[400px]">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                <i data-lucide="alarm-clock" class="w-5 h-5 text-rose-600"></i> Upcoming Reminders
+                            </h4>
+                            <button onclick="switchTab('calendar')" class="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline">Schedule</button>
+                        </div>
+                        <div id="dash-reminders" class="flex-1 space-y-3 overflow-y-auto custom-scrollbar pr-1">
+                            <!-- Populated Dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. NOTES MANAGEMENT TAB -->
+            <section id="tab-notes" class="hidden space-y-6">
+                <!-- Notes Toolbar -->
+                <div class="flex flex-col md:flex-row gap-4 items-center justify-between bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
+                    <div class="relative w-full md:w-80">
+                        <i data-lucide="search" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400"></i>
+                        <input type="text" id="note-search" oninput="renderNotes()" placeholder="Search title or content..." class="w-full bg-gray-50 dark:bg-gray-900 pl-10 pr-4 py-2 rounded-xl text-sm border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    </div>
+                    <div class="flex gap-3 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+                        <select id="note-category-filter" onchange="renderNotes()" class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                            <option value="All">All Categories</option>
+                            <option value="Work">💼 Work</option>
+                            <option value="Personal">🏡 Personal</option>
+                            <option value="Ideas">💡 Ideas</option>
+                            <option value="Study">📚 Study</option>
+                            <option value="Urgent">🚨 Urgent</option>
+                        </select>
+                        <select id="note-sort-filter" onchange="renderNotes()" class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none">
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="alphabetical">Alphabetical</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Notes Editor Panel & Notes Grid split screen layout -->
+                <div class="grid grid-cols-1 xl:grid-cols-5 gap-6 items-start">
+                    <!-- Note Form Card (2/5 Column) -->
+                    <div class="xl:col-span-2 bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm sticky top-6">
+                        <h3 id="note-form-title" class="text-lg font-bold mb-4 flex items-center gap-2 text-primary-600 dark:text-primary-400">
+                            <i data-lucide="edit-3" class="w-5 h-5"></i> Create Note
+                        </h3>
+                        <form id="note-form" onsubmit="saveNote(event)" class="space-y-4">
+                            <input type="hidden" id="note-id">
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Title *</label>
+                                <input type="text" id="note-title-input" required class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="A descriptive title...">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Category</label>
+                                    <select id="note-category-input" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                        <option value="Work">Work</option>
+                                        <option value="Personal">Personal</option>
+                                        <option value="Ideas">Ideas</option>
+                                        <option value="Study">Study</option>
+                                        <option value="Urgent">Urgent</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Note Tone</label>
+                                    <div class="flex items-center gap-2.5 h-10 px-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl">
+                                        <button type="button" onclick="setNoteColor('primary')" class="w-6 h-6 rounded-full bg-amber-700 border-2 border-white ring-2 ring-amber-700/30 scale-110 note-color-btn" data-color="primary"></button>
+                                        <button type="button" onclick="setNoteColor('secondary')" class="w-6 h-6 rounded-full bg-orange-400 border-2 border-transparent note-color-btn" data-color="secondary"></button>
+                                        <button type="button" onclick="setNoteColor('emerald')" class="w-6 h-6 rounded-full bg-emerald-600 border-2 border-transparent note-color-btn" data-color="emerald"></button>
+                                        <button type="button" onclick="setNoteColor('amber')" class="w-6 h-6 rounded-full bg-amber-500 border-2 border-transparent note-color-btn" data-color="amber"></button>
+                                        <button type="button" onclick="setNoteColor('rose')" class="w-6 h-6 rounded-full bg-rose-500 border-2 border-transparent note-color-btn" data-color="rose"></button>
+                                    </div>
+                                    <input type="hidden" id="note-color-input" value="primary">
+                                </div>
+                            </div>
+
+                            <!-- Optional Reminder Section -->
+                            <div class="border-t border-b border-gray-100 dark:border-gray-700 py-4 my-2">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="bell" class="w-4 h-4 text-primary-500"></i>
+                                        <span class="text-sm font-semibold">Reminder Notification</span>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="note-reminder-toggle" onchange="toggleReminderFields()" class="sr-only peer">
+                                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+                                    </label>
+                                </div>
+                                <div id="reminder-fields" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-gray-500 mb-1">DATE</label>
+                                        <input type="date" id="note-reminder-date" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-xs focus:outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-gray-500 mb-1">TIME</label>
+                                        <input type="time" id="note-reminder-time" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-xs focus:outline-none">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">Content</label>
+                                <textarea id="note-content-input" rows="8" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none custom-scrollbar" placeholder="Draft your content, thoughts, markdown, or lists..."></textarea>
+                            </div>
+                            
+                            <div class="flex gap-3 pt-2">
+                                <button type="button" onclick="resetNoteForm()" class="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold rounded-xl text-sm transition">
+                                    Cancel
+                                </button>
+                                <button type="submit" class="flex-1 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl text-sm shadow-lg shadow-primary-500/20 transition">
+                                    Save Note
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Notes Display Grid (3/5 Column) -->
+                    <div class="xl:col-span-3 space-y-4">
+                        <div class="flex justify-between items-center px-1">
+                            <span class="text-sm font-semibold text-gray-500"><span id="notes-count">0</span> Notes found</span>
+                            <div class="flex gap-2 text-xs">
+                                <button onclick="setGridCols(1)" id="grid-col-1-btn" class="p-1.5 rounded bg-gray-200 dark:bg-gray-700"><i data-lucide="rows" class="w-4 h-4"></i></button>
+                                <button onclick="setGridCols(2)" id="grid-col-2-btn" class="p-1.5 rounded bg-white dark:bg-gray-800"><i data-lucide="grid" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                        <div id="notes-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Populated Dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. TASKS CHECKLIST TAB -->
+            <section id="tab-tasks" class="hidden space-y-6 max-w-4xl mx-auto">
+                <!-- Task Progress Banner -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                    <div class="space-y-1">
+                        <h3 class="text-lg font-bold">Checking off Priorities</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Add checklist items and watch your progress thrive.</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="relative w-16 h-16 flex items-center justify-center">
+                            <svg class="absolute transform -rotate-90 w-full h-full">
+                                <circle cx="32" cy="32" r="28" stroke="currentColor" class="text-gray-200 dark:text-gray-700" stroke-width="6" fill="transparent"/>
+                                <circle cx="32" cy="32" r="28" stroke="currentColor" class="text-primary-600" stroke-width="6" fill="transparent" id="tasks-progress-circle" stroke-dasharray="175.9" stroke-dashoffset="175.9"/>
+                            </svg>
+                            <span id="tasks-progress-text" class="text-xs font-bold text-gray-800 dark:text-white">0%</span>
+                        </div>
+                        <div>
+                            <span class="block text-sm font-semibold text-gray-800 dark:text-white"><span id="tasks-done-count">0</span>/<span id="tasks-total-count">0</span> Completed</span>
+                            <span class="text-xs text-gray-500">Perfect task momentum</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Task & Filter Header -->
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-4">
+                    <form onsubmit="addTask(event)" class="flex flex-col sm:flex-row gap-3">
+                        <div class="flex-1 relative">
+                            <input type="text" id="task-title-input" required placeholder="What needs to be accomplished?" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        </div>
+                        <div class="w-full sm:w-44">
+                            <select id="task-priority-input" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                <option value="low">🟢 Low Priority</option>
+                                <option value="medium" selected>🟡 Medium</option>
+                                <option value="high">🔴 High Priority</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl px-6 py-3 text-sm shadow-lg shadow-primary-500/10 flex items-center justify-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Add
+                        </button>
+                    </form>
+
+                    <!-- Filter States -->
+                    <div class="flex items-center justify-between border-t border-gray-100 dark:border-gray-700 pt-3">
+                        <div class="flex gap-2">
+                            <button onclick="setTaskFilter('all')" id="btn-task-filter-all" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-primary-100 text-primary-700 dark:bg-primary-950/50 dark:text-primary-300">
+                                All
+                            </button>
+                            <button onclick="setTaskFilter('pending')" id="btn-task-filter-pending" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                Pending
+                            </button>
+                            <button onclick="setTaskFilter('completed')" id="btn-task-filter-completed" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                Completed
+                            </button>
+                        </div>
+                        <button onclick="clearCompletedTasks()" class="text-xs text-red-500 hover:underline">Clear Completed</button>
+                    </div>
+                </div>
+
+                <!-- Tasks Listing -->
+                <div id="tasks-list" class="space-y-3">
+                    <!-- Populated Dynamically -->
+                </div>
+            </section>
+
+            <!-- 4. CALENDAR TAB -->
+            <section id="tab-calendar" class="hidden space-y-6">
+                <!-- Split Calendar Layout -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    <!-- Calendar Body (8/12 Columns) -->
+                    <div class="lg:col-span-8 bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm">
+                        <!-- Month Switcher & Controls -->
+                        <div class="flex justify-between items-center mb-6">
+                            <div class="flex items-center gap-3">
+                                <h3 id="calendar-month-year" class="text-lg font-bold text-gray-900 dark:text-white">June 2026</h3>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="prevMonth()" class="p-2 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition">
+                                    <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                                </button>
+                                <button onclick="goToday()" class="px-3 py-2 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs font-bold rounded-xl transition">
+                                    Today
+                                </button>
+                                <button onclick="nextMonth()" class="p-2 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition">
+                                    <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Calendar Grid -->
+                        <div class="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                            <div>Sun</div>
+                            <div>Mon</div>
+                            <div>Tue</div>
+                            <div>Wed</div>
+                            <div>Thu</div>
+                            <div>Fri</div>
+                            <div>Sat</div>
+                        </div>
+                        <div id="calendar-days" class="grid grid-cols-7 gap-2">
+                            <!-- Populated Dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Side Reminders Tracker (4/12 Columns) -->
+                    <div class="lg:col-span-4 space-y-6">
+                        <!-- Add Event / Reminder Form -->
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
+                            <h4 class="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                <i data-lucide="bell" class="w-5 h-5 text-primary-500"></i> Set Custom Alarm
+                            </h4>
+                            <form onsubmit="addCalendarEvent(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Title *</label>
+                                    <input type="text" id="event-title" required class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="e.g. Code Review Meeting">
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Date</label>
+                                        <input type="date" id="event-date" required class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-xs focus:outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Time</label>
+                                        <input type="time" id="event-time" required class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-xs focus:outline-none">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Description (Optional)</label>
+                                    <input type="text" id="event-desc" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="e.g. Bring notes on architecture design">
+                                </div>
+                                <button type="submit" class="w-full py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-semibold text-sm rounded-xl transition shadow-lg shadow-primary-500/15">
+                                    Schedule Reminder
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Scheduled Alarms Stack -->
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <i data-lucide="clock" class="w-5 h-5 text-amber-600"></i> Active Alarms
+                                </h4>
+                                <span id="alarm-count" class="text-xs bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 font-bold px-2.5 py-0.5 rounded-full">0</span>
+                            </div>
+                            <div id="calendar-events-list" class="space-y-3 max-h-[250px] overflow-y-auto custom-scrollbar pr-1">
+                                <!-- Populated Dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Firebase Connection and Main Logic -->
+    <script type="module">
+        // Firebase Modular CDNs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Your exact Web configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyATD1v2FF_069FwKEpY5MiAdDeQoxIj7do",
+            authDomain: "bear-dashboard.firebaseapp.com",
+            databaseURL: "https://bear-dashboard-default-rtdb.firebaseio.com",
+            projectId: "bear-dashboard",
+            storageBucket: "bear-dashboard.firebasestorage.app",
+            messagingSenderId: "940361976888",
+            appId: "1:940361976888:web:8f0462db905557eca82acd",
+            measurementId: "G-EGSDXZ57PH"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        const provider = new GoogleAuthProvider();
+
+        // Application State
+        window.notesState = [];
+        window.tasksState = [];
+        window.alarmsState = [];
+        window.currentTab = 'dashboard';
+        window.currentTheme = 'light';
+        window.noteGridCols = 2;
+        window.taskFilter = 'all';
+        window.calendarDate = new Date(2026, 5, 15); // June 15, 2026
+        
+        let currentUser = null;
+        let isWritingToFirebase = false;
+
+        // Initialize App & Auth Listeners
+        window.addEventListener('DOMContentLoaded', () => {
+            detectDeviceTheme();
+            initializeTimeSubtitle();
+            resetDateInputs();
+            
+            // Set up constant clock scanning for alarms (runs every 10 seconds)
+            setInterval(checkActiveAlarms, 10000);
+
+            // Handle Authentication State Shifts
+            onAuthStateChanged(auth, async (user) => {
+                const loadingStatus = document.getElementById('auth-status-loading');
+                const loggedOutBlock = document.getElementById('auth-status-logged-out');
+                const loggedInBlock = document.getElementById('auth-status-logged-in');
+
+                loadingStatus.classList.add('hidden');
+
+                if (user) {
+                    currentUser = user;
+                    // Populate login UI
+                    document.getElementById('auth-user-avatar').src = user.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80';
+                    document.getElementById('auth-user-name').innerText = user.displayName || 'Authorized User';
+                    
+                    loggedOutBlock.classList.add('hidden');
+                    loggedInBlock.classList.remove('hidden');
+
+                    document.getElementById('storage-type-label').innerText = "Firebase RTDB";
+                    document.getElementById('storage-hint-text').innerText = "Real-time sync across connected devices.";
+                    document.getElementById('storage-percent').innerText = "Cloud Active";
+
+                    // Sync strategy: merge existing local storage with user's Firebase space
+                    await syncAndFetchCloudData(user.uid);
+                    showToast(`Signed in as ${user.displayName}. Cloud sync ready.`, 'success');
+                } else {
+                    currentUser = null;
+                    loggedOutBlock.classList.remove('hidden');
+                    loggedInBlock.classList.add('hidden');
+
+                    document.getElementById('storage-type-label').innerText = "Local Storage";
+                    document.getElementById('storage-hint-text').innerText = "Syncs with browser storage context.";
+                    
+                    // Fallback directly to local storage state
+                    loadFromLocalStorage();
+                    updateStorageUsage();
+                    updateAppStats();
+                    renderCurrentActiveTab();
+                }
+                lucide.createIcons();
+            });
+
+            // Bind Auth Actions
+            document.getElementById('btn-login-google').addEventListener('click', async () => {
+                try {
+                    await signInWithPopup(auth, provider);
+                } catch (error) {
+                    console.error("Auth Error:", error);
+                    showToast("Authentication failed. Please check connection.", "error");
+                }
+            });
+
+            document.getElementById('btn-logout-google').addEventListener('click', async () => {
+                try {
+                    await signOut(auth);
+                    showToast("Logged out successfully.", "info");
+                } catch (error) {
+                    console.error("Logout Error:", error);
+                }
+            });
+        });
+
+        // Sync & Load Cloud Realtime Database Data
+        async function syncAndFetchCloudData(uid) {
+            const userRef = ref(db, `users/${uid}`);
+            
+            try {
+                // Fetch snapshot first to verify merge conditions
+                const snapshot = await get(userRef);
+                const cloudData = snapshot.exists() ? snapshot.val() : null;
+
+                const localNotes = JSON.parse(localStorage.getItem('zf_notes')) || [];
+                const localTasks = JSON.parse(localStorage.getItem('zf_tasks')) || [];
+                const localAlarms = JSON.parse(localStorage.getItem('zf_alarms')) || [];
+
+                if (!cloudData) {
+                    // First time login - upload existing local storage to cloud directly
+                    await set(userRef, {
+                        notes: localNotes,
+                        tasks: localTasks.length ? localTasks : getMockTasks(),
+                        alarms: localAlarms.length ? localAlarms : getMockAlarms()
+                    });
+                } else {
+                    // Cloud exists - Smart merge local storage with cloud (prioritize cloud/no duplicates)
+                    const mergedNotes = [...cloudData.notes || []];
+                    localNotes.forEach(localN => {
+                        if (!mergedNotes.some(n => n.id === localN.id)) {
+                            mergedNotes.push(localN);
+                        }
+                    });
+
+                    const mergedTasks = [...cloudData.tasks || []];
+                    localTasks.forEach(localT => {
+                        if (!mergedTasks.some(t => t.id === localT.id)) {
+                            mergedTasks.push(localT);
+                        }
+                    });
+
+                    const mergedAlarms = [...cloudData.alarms || []];
+                    localAlarms.forEach(localA => {
+                        if (!mergedAlarms.some(a => a.id === localA.id)) {
+                            mergedAlarms.push(localA);
+                        }
+                    });
+
+                    // Save merged set back to cloud
+                    await set(userRef, {
+                        notes: mergedNotes,
+                        tasks: mergedTasks,
+                        alarms: mergedAlarms
+                    });
+                }
+
+                // Establish live synchronization listener
+                onValue(userRef, (latestSnapshot) => {
+                    if (isWritingToFirebase) return; // Prevent loop echo
+
+                    const currentVal = latestSnapshot.val();
+                    if (currentVal) {
+                        window.notesState = currentVal.notes || [];
+                        window.tasksState = currentVal.tasks || [];
+                        window.alarmsState = currentVal.alarms || [];
+                    } else {
+                        window.notesState = [];
+                        window.tasksState = [];
+                        window.alarmsState = [];
+                    }
+                    
+                    // Backup locally
+                    localStorage.setItem('zf_notes', JSON.stringify(window.notesState));
+                    localStorage.setItem('zf_tasks', JSON.stringify(window.tasksState));
+                    localStorage.setItem('zf_alarms', JSON.stringify(window.alarmsState));
+
+                    updateAppStats();
+                    renderCurrentActiveTab();
+                });
+
+            } catch (error) {
+                console.error("Database sync error:", error);
+                showToast("Realtime Database sync failed. Using offline cached data.", "error");
+                loadFromLocalStorage();
+                renderCurrentActiveTab();
+            }
+        }
+
+        // Push state changes up to firebase or local storage fallback
+        async function syncStateAndSave() {
+            updateAppStats();
+            updateStorageUsage();
+
+            // Always back up locally first
+            localStorage.setItem('zf_notes', JSON.stringify(window.notesState));
+            localStorage.setItem('zf_tasks', JSON.stringify(window.tasksState));
+            localStorage.setItem('zf_alarms', JSON.stringify(window.alarmsState));
+
+            if (currentUser) {
+                isWritingToFirebase = true;
+                const userRef = ref(db, `users/${currentUser.uid}`);
+                try {
+                    await set(userRef, {
+                        notes: window.notesState,
+                        tasks: window.tasksState,
+                        alarms: window.alarmsState
+                    });
+                } catch (err) {
+                    console.error("Failed to sync changes with cloud:", err);
+                    showToast("Could not sync with Cloud Database. Saved locally.", "error");
+                } finally {
+                    isWritingToFirebase = false;
+                }
+            }
+        }
+
+        // Expose state triggers to parent window scope for standard HTML callbacks
+        window.syncStateAndSave = syncStateAndSave;
+    </script>
+
+    <script>
+        // System & Actions Script
+        
+        // Render target active workspace
+        function renderCurrentActiveTab() {
+            if (currentTab === 'dashboard') {
+                renderDashboard();
+            } else if (currentTab === 'notes') {
+                renderNotes();
+            } else if (currentTab === 'tasks') {
+                renderTasks();
+            } else if (currentTab === 'calendar') {
+                renderCalendar();
+                renderAlarmsList();
+            }
+        }
+
+        // Set date input values
+        function resetDateInputs() {
+            const todayStr = "2026-06-15";
+            document.getElementById('note-reminder-date').value = todayStr;
+            document.getElementById('event-date').value = todayStr;
+            document.getElementById('note-reminder-time').value = "18:00";
+            document.getElementById('event-time').value = "18:00";
+        }
+
+        // Subtitle dynamic clock
+        function initializeTimeSubtitle() {
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('current-date-subtitle').innerText = formatter.format(new Date(2026, 5, 15));
+        }
+
+        // Handle Tab Switching
+        function switchTab(tabId) {
+            currentTab = tabId;
+            
+            const tabs = ['dashboard', 'notes', 'tasks', 'calendar'];
+            tabs.forEach(t => {
+                const element = document.getElementById(`tab-${t}`);
+                if (t === tabId) {
+                    element.classList.remove('hidden');
+                } else {
+                    element.classList.add('hidden');
+                }
+            });
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = "nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition duration-150 text-left text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50";
+            });
+
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if (activeBtn) {
+                activeBtn.className = "nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition duration-150 text-left bg-primary-50 text-primary-600 dark:bg-primary-950/40 dark:text-primary-400";
+            }
+
+            const pageTitle = document.getElementById('current-page-title');
+            if (tabId === 'dashboard') {
+                pageTitle.innerText = "Dashboard Overview";
+                renderDashboard();
+            } else if (tabId === 'notes') {
+                pageTitle.innerText = "My Notes Directory";
+                renderNotes();
+            } else if (tabId === 'tasks') {
+                pageTitle.innerText = "Task Master Checklist";
+                renderTasks();
+            } else if (tabId === 'calendar') {
+                pageTitle.innerText = "Schedule & Interactive Calendar";
+                renderCalendar();
+                renderAlarmsList();
+            }
+
+            lucide.createIcons();
+        }
+
+        // Dark/Light Theme Manager
+        function detectDeviceTheme() {
+            if (localStorage.getItem('theme') === 'dark') {
+                enableDarkTheme();
+            } else {
+                disableDarkTheme();
+            }
+        }
+
+        function toggleDarkMode() {
+            if (currentTheme === 'light') {
+                enableDarkTheme();
+            } else {
+                disableDarkTheme();
+            }
+        }
+
+        function enableDarkTheme() {
+            document.documentElement.classList.add('dark');
+            currentTheme = 'dark';
+            localStorage.setItem('theme', 'dark');
+            updateThemeIcons();
+        }
+
+        function disableDarkTheme() {
+            document.documentElement.classList.remove('dark');
+            currentTheme = 'light';
+            localStorage.setItem('theme', 'light');
+            updateThemeIcons();
+        }
+
+        function updateThemeIcons() {
+            const deskIcon = document.getElementById('theme-icon-desktop');
+            const mobIcon = document.getElementById('theme-icon-mobile');
+            const iconName = currentTheme === 'dark' ? 'sun' : 'moon';
+            
+            if (deskIcon) deskIcon.setAttribute('data-lucide', iconName);
+            if (mobIcon) mobIcon.setAttribute('data-lucide', iconName);
+            
+            lucide.createIcons();
+        }
+
+        // Offline Fallback local loaders
+        function loadFromLocalStorage() {
+            const rawNotes = localStorage.getItem('zf_notes');
+            const rawTasks = localStorage.getItem('zf_tasks');
+            const rawAlarms = localStorage.getItem('zf_alarms');
+
+            window.notesState = rawNotes ? JSON.parse(rawNotes) : [];
+            window.tasksState = rawTasks ? JSON.parse(rawTasks) : getMockTasks();
+            window.alarmsState = rawAlarms ? JSON.parse(rawAlarms) : getMockAlarms();
+        }
+
+        function getMockTasks() {
+            return [
+                { id: 't1', title: 'Plan outline for high-level technical documentation', priority: 'high', completed: false, created: '2026-06-15T09:00:00.000Z' },
+                { id: 't2', title: 'Schedule weekly synced development architecture updates', priority: 'medium', completed: true, created: '2026-06-14T10:00:00.000Z' },
+                { id: 't3', title: 'Set automatic reminder targets inside the BRAUNBÄR calendar tool', priority: 'low', completed: false, created: '2026-06-15T11:00:00.000Z' }
+            ];
+        }
+
+        function getMockAlarms() {
+            return [
+                { id: 'a1', title: 'Complete Workspace Strategy Review', date: '2026-06-15', time: '18:00', desc: 'Sync up targets across local storage and design blocks', triggered: false },
+                { id: 'a2', title: 'Gym Workout Routine', date: '2026-06-16', time: '08:00', desc: 'Strength session priority target', triggered: false }
+            ];
+        }
+
+        // Local Storage sizing estimation
+        function updateStorageUsage() {
+            let totalChars = 0;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('zf_') || key === 'theme') {
+                    totalChars += key.length + (localStorage.getItem(key) || '').length;
+                }
+            }
+            const limitInBytes = 5 * 1024 * 1024; 
+            const bytesUsed = totalChars * 2; 
+            const percent = Math.min(Math.round((bytesUsed / limitInBytes) * 100), 100);
+            
+            document.getElementById('storage-progress').style.width = `${percent}%`;
+            
+            // Check if logged in to show alternative label
+            const label = document.getElementById('storage-type-label');
+            if (label && label.innerText !== "Firebase RTDB") {
+                document.getElementById('storage-percent').innerText = `${percent}%`;
+            }
+        }
+
+        function updateAppStats() {
+            document.getElementById('stat-notes').innerText = window.notesState.length;
+            document.getElementById('stat-tasks').innerText = window.tasksState.filter(t => !t.completed).length;
+            document.getElementById('stat-reminders').innerText = window.alarmsState.filter(a => !a.triggered).length;
+        }
+
+        // Elegant custom toast alert system
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let colorClasses = "bg-amber-800 text-white";
+            let icon = "check-circle";
+            if (type === 'error') {
+                colorClasses = "bg-rose-700 text-white";
+                icon = "alert-triangle";
+            } else if (type === 'info') {
+                colorClasses = "bg-primary-600 text-white";
+                icon = "info";
+            }
+
+            toast.className = `flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto ${colorClasses}`;
+            toast.innerHTML = `
+                <i data-lucide="${icon}" class="w-5 h-5 flex-shrink-0"></i>
+                <span class="text-xs font-semibold">${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 50);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-[-10px]');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3500);
+        }
+
+        // --- REMINDERS & ALARMS CORE ---
+        let currentTriggeredAlarm = null;
+
+        function checkActiveAlarms() {
+            const currentSystemDate = new Date();
+            const year = currentSystemDate.getFullYear();
+            const month = String(currentSystemDate.getMonth() + 1).padStart(2, '0');
+            const day = String(currentSystemDate.getDate()).padStart(2, '0');
+            const hours = String(currentSystemDate.getHours()).padStart(2, '0');
+            const minutes = String(currentSystemDate.getMinutes()).padStart(2, '0');
+            
+            const localDateStr = `${year}-${month}-${day}`;
+            const localTimeStr = `${hours}:${minutes}`;
+
+            window.alarmsState.forEach(alarm => {
+                if (!alarm.triggered && alarm.date === localDateStr && alarm.time === localTimeStr) {
+                    triggerReminderModal(alarm);
+                }
+            });
+        }
+
+        function triggerReminderModal(alarm) {
+            currentTriggeredAlarm = alarm;
+            document.getElementById('reminder-title').innerText = alarm.title;
+            document.getElementById('reminder-desc').innerText = alarm.desc || 'No description provided.';
+            
+            const modal = document.getElementById('reminder-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+                oscillator.connect(audioCtx.destination);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 1);
+            } catch (e) {
+                // restrictions
+            }
+        }
+
+        function acknowledgeReminder() {
+            if (currentTriggeredAlarm) {
+                window.alarmsState = window.alarmsState.map(a => {
+                    if (a.id === currentTriggeredAlarm.id) {
+                        return { ...a, triggered: true };
+                    }
+                    return a;
+                });
+                window.syncStateAndSave();
+                showToast("Alarm acknowledged.");
+            }
+            closeReminderModal();
+        }
+
+        function dismissReminder() {
+            if (currentTriggeredAlarm) {
+                const timeStr = currentTriggeredAlarm.time;
+                const [h, m] = timeStr.split(':').map(Number);
+                let newMin = m + 5;
+                let newHr = h;
+                if (newMin >= 60) {
+                    newMin -= 60;
+                    newHr = (newHr + 1) % 24;
+                }
+                const newTimeStr = `${String(newHr).padStart(2, '0')}:${String(newMin).padStart(2, '0')}`;
+
+                window.alarmsState.push({
+                    id: 'snooze-' + Date.now(),
+                    title: `[Snoozed] ${currentTriggeredAlarm.title}`,
+                    date: currentTriggeredAlarm.date,
+                    time: newTimeStr,
+                    desc: currentTriggeredAlarm.desc,
+                    triggered: false
+                });
+
+                window.alarmsState = window.alarmsState.map(a => {
+                    if (a.id === currentTriggeredAlarm.id) {
+                        return { ...a, triggered: true };
+                    }
+                    return a;
+                });
+
+                window.syncStateAndSave();
+                showToast(`Snoozed for 5 minutes (Rings at ${newTimeStr})`, 'info');
+            }
+            closeReminderModal();
+        }
+
+        function closeReminderModal() {
+            const modal = document.getElementById('reminder-modal');
+            modal.classList.add('hidden');
+            currentTriggeredAlarm = null;
+            if (currentTab === 'calendar') {
+                renderAlarmsList();
+                renderCalendar();
+            }
+            renderDashboard();
+        }
+
+        // --- DASHBOARD LAYOUT POPULATION ---
+        function renderDashboard() {
+            updateAppStats();
+
+            // Recent Notes
+            const recentNotesContainer = document.getElementById('dash-recent-notes');
+            if (window.notesState.length === 0) {
+                recentNotesContainer.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-center p-4">
+                        <div class="bg-primary-50 dark:bg-gray-700/60 p-3 rounded-full mb-2">
+                            <i data-lucide="file-question" class="w-6 h-6 text-primary-400"></i>
+                        </div>
+                        <p class="text-sm font-semibold text-gray-500">No notes written yet</p>
+                        <button onclick="switchTab('notes')" class="text-xs text-primary-600 hover:underline mt-1 font-medium">Create one now</button>
+                    </div>
+                `;
+            } else {
+                const sortedNotes = [...window.notesState].sort((a,b) => new Date(b.updated) - new Date(a.updated)).slice(0, 3);
+                recentNotesContainer.innerHTML = sortedNotes.map(n => `
+                    <div onclick="editNoteFromDashboard('${n.id}')" class="group p-3.5 bg-gray-50 hover:bg-primary-50/50 dark:bg-gray-900/60 dark:hover:bg-primary-950/20 border-l-4 border-primary-500 rounded-r-xl rounded-l-md transition cursor-pointer">
+                        <div class="flex items-center justify-between mb-1">
+                            <h5 class="font-bold text-xs text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 truncate">${escapeHTML(n.title)}</h5>
+                            <span class="text-[10px] bg-primary-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-primary-800 dark:text-primary-200">${n.category}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">${escapeHTML(n.content) || 'No preview content.'}</p>
+                        <div class="flex items-center justify-between mt-2.5 pt-2 border-t border-gray-200/50 dark:border-gray-800 text-[10px] text-gray-400">
+                            <span>${new Date(n.updated).toLocaleDateString()}</span>
+                            ${n.reminderEnabled ? `<span class="flex items-center gap-1 text-rose-500"><i data-lucide="bell" class="w-2.5 h-2.5"></i> Set</span>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Checklist Tasks
+            const dashTasksContainer = document.getElementById('dash-tasks');
+            const pendingTasks = window.tasksState.filter(t => !t.completed).slice(0, 4);
+            if (pendingTasks.length === 0) {
+                dashTasksContainer.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-center p-4">
+                        <div class="bg-gray-100 dark:bg-gray-700/60 p-3 rounded-full mb-2">
+                            <i data-lucide="sparkles" class="w-6 h-6 text-amber-500"></i>
+                        </div>
+                        <p class="text-sm font-semibold text-gray-500">All caught up!</p>
+                        <button onclick="switchTab('tasks')" class="text-xs text-primary-600 hover:underline mt-1 font-medium">Add task target</button>
+                    </div>
+                `;
+            } else {
+                dashTasksContainer.innerHTML = pendingTasks.map(t => {
+                    let badgeColor = "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300";
+                    if (t.priority === 'high') badgeColor = "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300";
+                    if (t.priority === 'medium') badgeColor = "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300";
+
+                    return `
+                        <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/60 rounded-xl border border-gray-100 dark:border-gray-800">
+                            <div class="flex items-center gap-2.5 min-w-0 flex-1 mr-2">
+                                <button onclick="toggleTaskStatus('${t.id}')" class="w-5 h-5 rounded-md border border-gray-300 dark:border-gray-600 flex items-center justify-center bg-white dark:bg-gray-800 hover:border-primary-500">
+                                    <span class="w-2.5 h-2.5 rounded bg-transparent"></span>
+                                </button>
+                                <span class="text-xs text-gray-700 dark:text-gray-300 truncate font-medium">${escapeHTML(t.title)}</span>
+                            </div>
+                            <span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${badgeColor} flex-shrink-0">${t.priority}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Alarms
+            const dashAlarmsContainer = document.getElementById('dash-reminders');
+            const futureAlarms = window.alarmsState.filter(a => !a.triggered).slice(0, 4);
+            if (futureAlarms.length === 0) {
+                dashAlarmsContainer.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-center p-4">
+                        <div class="bg-gray-100 dark:bg-gray-700/60 p-3 rounded-full mb-2">
+                            <i data-lucide="bell-off" class="w-6 h-6 text-gray-400"></i>
+                        </div>
+                        <p class="text-sm font-semibold text-gray-500">No active alarms set</p>
+                        <button onclick="switchTab('calendar')" class="text-xs text-primary-600 hover:underline mt-1 font-medium">Create custom alarm</button>
+                    </div>
+                `;
+            } else {
+                dashAlarmsContainer.innerHTML = futureAlarms.map(a => `
+                    <div class="p-3 bg-gray-50 dark:bg-gray-900/60 border border-gray-100 dark:border-gray-800 rounded-xl flex items-center justify-between">
+                        <div class="min-w-0 flex-1 pr-2">
+                            <h5 class="text-xs font-bold text-gray-800 dark:text-white truncate">${escapeHTML(a.title)}</h5>
+                            <span class="text-[10px] text-gray-400">${a.desc || 'No description'}</span>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <span class="block text-xs font-bold text-primary-600 dark:text-primary-400">${a.time}</span>
+                            <span class="text-[9px] text-gray-400">${a.date}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            lucide.createIcons();
+        }
+
+        function editNoteFromDashboard(noteId) {
+            switchTab('notes');
+            loadNoteIntoForm(noteId);
+        }
+
+        // --- NOTE ACTIONS ---
+        function setGridCols(cols) {
+            noteGridCols = cols;
+            const btn1 = document.getElementById('grid-col-1-btn');
+            const btn2 = document.getElementById('grid-col-2-btn');
+            
+            if (cols === 1) {
+                btn1.className = "p-1.5 rounded bg-gray-200 dark:bg-gray-700";
+                btn2.className = "p-1.5 rounded bg-white dark:bg-gray-800";
+            } else {
+                btn1.className = "p-1.5 rounded bg-white dark:bg-gray-800";
+                btn2.className = "p-1.5 rounded bg-gray-200 dark:bg-gray-700";
+            }
+            renderNotes();
+        }
+
+        function setNoteColor(color) {
+            document.getElementById('note-color-input').value = color;
+            document.querySelectorAll('.note-color-btn').forEach(btn => {
+                const btnColor = btn.getAttribute('data-color');
+                if (btnColor === color) {
+                    let activeRing = btnColor === 'primary' ? 'ring-amber-700/30' : `ring-${btnColor}-500/30`;
+                    let activeBg = btnColor === 'primary' ? 'bg-amber-700' : `bg-${btnColor}-500`;
+                    btn.className = `w-6 h-6 rounded-full ${activeBg} border-2 border-white ring-2 ${activeRing} scale-110 note-color-btn`;
+                } else {
+                    let normalBg = btnColor === 'primary' ? 'bg-amber-700' : `bg-${btnColor}-500`;
+                    btn.className = `w-6 h-6 rounded-full ${normalBg} border-2 border-transparent note-color-btn`;
+                }
+            });
+        }
+
+        function toggleReminderFields() {
+            const toggle = document.getElementById('note-reminder-toggle');
+            const fields = document.getElementById('reminder-fields');
+            if (toggle.checked) {
+                fields.classList.remove('hidden');
+            } else {
+                fields.classList.add('hidden');
+            }
+        }
+
+        function saveNote(event) {
+            event.preventDefault();
+            
+            const id = document.getElementById('note-id').value;
+            const title = document.getElementById('note-title-input').value.trim();
+            const category = document.getElementById('note-category-input').value;
+            const color = document.getElementById('note-color-input').value;
+            const content = document.getElementById('note-content-input').value.trim();
+            const reminderEnabled = document.getElementById('note-reminder-toggle').checked;
+            const reminderDate = document.getElementById('note-reminder-date').value;
+            const reminderTime = document.getElementById('note-reminder-time').value;
+
+            if (!title) {
+                showToast("Please enter a valid title", "error");
+                return;
+            }
+
+            const updatedNote = {
+                id: id || 'note-' + Date.now(),
+                title,
+                category,
+                color,
+                content,
+                reminderEnabled,
+                reminderDate,
+                reminderTime,
+                updated: new Date().toISOString()
+            };
+
+            if (id) {
+                window.notesState = window.notesState.map(n => n.id === id ? updatedNote : n);
+                showToast("Note updated successfully!");
+                window.alarmsState = window.alarmsState.filter(a => a.id !== `note-alarm-${id}`);
+            } else {
+                window.notesState.push(updatedNote);
+                showToast("New note created!");
+            }
+
+            if (reminderEnabled && reminderDate && reminderTime) {
+                window.alarmsState.push({
+                    id: `note-alarm-${updatedNote.id}`,
+                    title: `Note Reminder: ${title}`,
+                    date: reminderDate,
+                    time: reminderTime,
+                    desc: content.slice(0, 100) + '...',
+                    triggered: false
+                });
+            }
+
+            window.syncStateAndSave();
+            resetNoteForm();
+            renderNotes();
+        }
+
+        function editNote(id) {
+            loadNoteIntoForm(id);
+            document.getElementById('note-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function loadNoteIntoForm(id) {
+            const note = window.notesState.find(n => n.id === id);
+            if (!note) return;
+
+            document.getElementById('note-id').value = note.id;
+            document.getElementById('note-title-input').value = note.title;
+            document.getElementById('note-category-input').value = note.category;
+            setNoteColor(note.color || 'primary');
+            document.getElementById('note-content-input').value = note.content;
+            
+            const reminderToggle = document.getElementById('note-reminder-toggle');
+            reminderToggle.checked = !!note.reminderEnabled;
+            toggleReminderFields();
+
+            if (note.reminderEnabled) {
+                document.getElementById('note-reminder-date').value = note.reminderDate;
+                document.getElementById('note-reminder-time').value = note.reminderTime;
+            } else {
+                resetDateInputs();
+            }
+
+            document.getElementById('note-form-title').innerHTML = `<i data-lucide="edit-3" class="w-5 h-5"></i> Editing Note`;
+            lucide.createIcons();
+        }
+
+        function deleteNote(id, event) {
+            if (event) event.stopPropagation();
+            
+            window.notesState = window.notesState.filter(n => n.id !== id);
+            window.alarmsState = window.alarmsState.filter(a => a.id !== `note-alarm-${id}`);
+            
+            window.syncStateAndSave();
+            showToast("Note removed successfully.");
+            
+            if (document.getElementById('note-id').value === id) {
+                resetNoteForm();
+            }
+            renderNotes();
+        }
+
+        function resetNoteForm() {
+            document.getElementById('note-id').value = '';
+            document.getElementById('note-title-input').value = '';
+            document.getElementById('note-category-input').value = 'Work';
+            setNoteColor('primary');
+            document.getElementById('note-content-input').value = '';
+            
+            document.getElementById('note-reminder-toggle').checked = false;
+            toggleReminderFields();
+            resetDateInputs();
+
+            document.getElementById('note-form-title').innerHTML = `<i data-lucide="edit-3" class="w-5 h-5"></i> Create Note`;
+            lucide.createIcons();
+        }
+
+        function quickAddNote() {
+            switchTab('notes');
+            resetNoteForm();
+            document.getElementById('note-title-input').focus();
+        }
+
+        function renderNotes() {
+            const grid = document.getElementById('notes-grid');
+            const searchVal = document.getElementById('note-search').value.toLowerCase();
+            const categoryVal = document.getElementById('note-category-filter').value;
+            const sortVal = document.getElementById('note-sort-filter').value;
+
+            if (noteGridCols === 1) {
+                grid.className = "grid grid-cols-1 gap-4";
+            } else {
+                grid.className = "grid grid-cols-1 md:grid-cols-2 gap-4";
+            }
+
+            let filtered = window.notesState.filter(n => {
+                const matchesSearch = n.title.toLowerCase().includes(searchVal) || n.content.toLowerCase().includes(searchVal);
+                const matchesCategory = categoryVal === 'All' || n.category === categoryVal;
+                return matchesSearch && matchesCategory;
+            });
+
+            if (sortVal === 'newest') {
+                filtered.sort((a,b) => new Date(b.updated) - new Date(a.updated));
+            } else if (sortVal === 'oldest') {
+                filtered.sort((a,b) => new Date(a.updated) - new Date(b.updated));
+            } else if (sortVal === 'alphabetical') {
+                filtered.sort((a,b) => a.title.localeCompare(b.title));
+            }
+
+            document.getElementById('notes-count').innerText = filtered.length;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-8 rounded-2xl text-center space-y-3">
+                        <div class="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-900 flex items-center justify-center mx-auto text-gray-400">
+                            <i data-lucide="file-x-2" class="w-6 h-6"></i>
+                        </div>
+                        <h4 class="font-semibold text-gray-700 dark:text-gray-300">No matching notes found</h4>
+                        <p class="text-xs text-gray-400 max-w-xs mx-auto">Try typing a different keyword or category filter.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            grid.innerHTML = filtered.map(n => {
+                let cardColorClasses = "";
+                let headColorClasses = "";
+                const userColor = n.color || 'primary';
+                
+                if (userColor === 'primary') {
+                    cardColorClasses = "bg-amber-50/10 dark:bg-amber-950/10 border-amber-100 dark:border-amber-900/40 hover:border-amber-300";
+                    headColorClasses = "text-amber-800 dark:text-amber-400";
+                } else if (userColor === 'secondary') {
+                    cardColorClasses = "bg-orange-50/10 dark:bg-orange-950/10 border-orange-100 dark:border-orange-900/40 hover:border-orange-300";
+                    headColorClasses = "text-orange-600 dark:text-orange-400";
+                } else if (userColor === 'emerald') {
+                    cardColorClasses = "bg-emerald-50/20 dark:bg-emerald-950/10 border-emerald-100 dark:border-emerald-900/40 hover:border-emerald-300";
+                    headColorClasses = "text-emerald-600 dark:text-emerald-400";
+                } else if (userColor === 'amber') {
+                    cardColorClasses = "bg-amber-50/20 dark:bg-amber-950/10 border-amber-100 dark:border-amber-900/40 hover:border-amber-300";
+                    headColorClasses = "text-amber-600 dark:text-amber-400";
+                } else if (userColor === 'rose') {
+                    cardColorClasses = "bg-rose-50/20 dark:bg-rose-950/10 border-rose-100 dark:border-rose-900/40 hover:border-rose-300";
+                    headColorClasses = "text-rose-600 dark:text-rose-400";
+                }
+
+                return `
+                    <div class="p-5 bg-white dark:bg-gray-800 border-2 rounded-2xl flex flex-col justify-between group transition-all duration-150 ${cardColorClasses}">
+                        <div>
+                            <div class="flex items-center justify-between gap-3 mb-2">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">${n.category}</span>
+                                <div class="flex gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
+                                    <button onclick="editNote('${n.id}')" title="Edit Note" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-gray-900 dark:hover:text-white">
+                                        <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                    <button onclick="deleteNote('${n.id}', event)" title="Delete Note" class="p-1 rounded hover:bg-red-100 dark:hover:bg-red-950 text-gray-500 hover:text-red-600 dark:hover:text-red-400">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <h4 class="font-bold text-sm mb-2 leading-tight ${headColorClasses}">${escapeHTML(n.title)}</h4>
+                            <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap mb-4 font-light">${escapeHTML(n.content) || 'No core text body.'}</p>
+                        </div>
+                        <div class="flex items-center justify-between border-t border-gray-100 dark:border-gray-700 pt-3 text-[10px] text-gray-400 dark:text-gray-500">
+                            <span>Modified ${new Date(n.updated).toLocaleDateString()}</span>
+                            ${n.reminderEnabled ? `
+                                <div class="flex items-center gap-1.5 text-rose-500 dark:text-rose-400 font-semibold bg-rose-50 dark:bg-rose-950/25 px-2 py-0.5 rounded-full">
+                                    <i data-lucide="bell" class="w-3 h-3"></i>
+                                    <span>${n.reminderTime} (${n.reminderDate})</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        // --- TASKS ENGINE ---
+        function setTaskFilter(filter) {
+            taskFilter = filter;
+            document.querySelectorAll('#btn-task-filter-all, #btn-task-filter-pending, #btn-task-filter-completed').forEach(b => {
+                b.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700";
+            });
+
+            const activeBtn = document.getElementById(`btn-task-filter-${filter}`);
+            if (activeBtn) {
+                activeBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-primary-100 text-primary-700 dark:bg-primary-950/50 dark:text-primary-300";
+            }
+            renderTasks();
+        }
+
+        function addTask(event) {
+            event.preventDefault();
+            const input = document.getElementById('task-title-input');
+            const priority = document.getElementById('task-priority-input').value;
+            const title = input.value.trim();
+
+            if (!title) return;
+
+            const newTask = {
+                id: 'task-' + Date.now(),
+                title,
+                priority,
+                completed: false,
+                created: new Date().toISOString()
+            };
+
+            window.tasksState.push(newTask);
+            window.syncStateAndSave();
+            input.value = '';
+            showToast("Task added.");
+            renderTasks();
+        }
+
+        function toggleTaskStatus(id) {
+            window.tasksState = window.tasksState.map(t => {
+                if (t.id === id) {
+                    const nextState = !t.completed;
+                    if (nextState) showToast("Completed item! Excellent job 🎉", "success");
+                    return { ...t, completed: nextState };
+                }
+                return t;
+            });
+            window.syncStateAndSave();
+            renderTasks();
+        }
+
+        function deleteTask(id) {
+            window.tasksState = window.tasksState.filter(t => t.id !== id);
+            window.syncStateAndSave();
+            showToast("Task deleted.");
+            renderTasks();
+        }
+
+        function clearCompletedTasks() {
+            const initialCount = window.tasksState.length;
+            window.tasksState = window.tasksState.filter(t => !t.completed);
+            const clearedCount = initialCount - window.tasksState.length;
+            
+            if (clearedCount > 0) {
+                window.syncStateAndSave();
+                showToast(`Removed ${clearedCount} completed tasks.`);
+                renderTasks();
+            } else {
+                showToast("No completed tasks found to clear.", "info");
+            }
+        }
+
+        function renderTasks() {
+            const container = document.getElementById('tasks-list');
+            
+            const total = window.tasksState.length;
+            const completed = window.tasksState.filter(t => t.completed).length;
+            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            document.getElementById('tasks-total-count').innerText = total;
+            document.getElementById('tasks-done-count').innerText = completed;
+            document.getElementById('tasks-progress-text').innerText = `${percent}%`;
+
+            const circle = document.getElementById('tasks-progress-circle');
+            const circumference = 2 * Math.PI * 28;
+            const strokeDashoffset = circumference - (percent / 100) * circumference;
+            circle.style.strokeDashoffset = strokeDashoffset;
+
+            let filtered = window.tasksState;
+            if (taskFilter === 'pending') {
+                filtered = window.tasksState.filter(t => !t.completed);
+            } else if (taskFilter === 'completed') {
+                filtered = window.tasksState.filter(t => t.completed);
+            }
+
+            const priorityWeight = { high: 3, medium: 2, low: 1 };
+            filtered.sort((a, b) => priorityWeight[b.priority] - priorityWeight[a.priority]);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-8 rounded-2xl text-center space-y-3">
+                        <div class="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-900 flex items-center justify-center mx-auto text-gray-400">
+                            <i data-lucide="check-square" class="w-6 h-6"></i>
+                        </div>
+                        <h4 class="font-semibold text-gray-700 dark:text-gray-300">No tasks in this list</h4>
+                        <p class="text-xs text-gray-400 max-w-xs mx-auto">Take control of your day by entering your action item checklist above.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = filtered.map(t => {
+                let badgeColor = "bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-300";
+                if (t.priority === 'high') badgeColor = "bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300";
+                if (t.priority === 'medium') badgeColor = "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300";
+
+                return `
+                    <div class="group flex items-center justify-between p-4 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl transition duration-150 ${t.completed ? 'opacity-65' : ''}">
+                        <div class="flex items-center gap-3.5 min-w-0 flex-1">
+                            <button onclick="toggleTaskStatus('${t.id}')" class="w-6 h-6 rounded-lg border flex items-center justify-center transition ${t.completed ? 'bg-primary-600 border-primary-600 text-white' : 'border-gray-300 dark:border-gray-600 hover:border-primary-500 bg-white dark:bg-gray-800'}">
+                                ${t.completed ? '<i data-lucide="check" class="w-4 h-4"></i>' : '<span class="w-2.5 h-2.5 rounded bg-transparent"></span>'}
+                            </button>
+                            <span class="text-sm text-gray-700 dark:text-gray-200 truncate ${t.completed ? 'line-through text-gray-400 dark:text-gray-500' : 'font-medium'}">${escapeHTML(t.title)}</span>
+                        </div>
+                        <div class="flex items-center gap-3 ml-4">
+                            <span class="text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded ${badgeColor}">${t.priority}</span>
+                            <button onclick="deleteTask('${t.id}')" class="opacity-0 group-hover:opacity-100 transition p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 rounded hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        // --- CALENDAR ENGINE ---
+        function prevMonth() {
+            calendarDate.setMonth(calendarDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            calendarDate.setMonth(calendarDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        function goToday() {
+            calendarDate = new Date(2026, 5, 15);
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const year = calendarDate.getFullYear();
+            const month = calendarDate.getMonth();
+
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            document.getElementById('calendar-month-year').innerText = `${monthNames[month]} ${year}`;
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const lastDay = new Date(year, month + 1, 0).getDate();
+            const prevLastDay = new Date(year, month, 0).getDate();
+
+            const calendarDaysContainer = document.getElementById('calendar-days');
+            calendarDaysContainer.innerHTML = '';
+
+            for (let i = firstDayIndex; i > 0; i--) {
+                const dayNum = prevLastDay - i + 1;
+                calendarDaysContainer.appendChild(createDayCell(dayNum, true, year, month - 1));
+            }
+
+            for (let i = 1; i <= lastDay; i++) {
+                calendarDaysContainer.appendChild(createDayCell(i, false, year, month));
+            }
+
+            const totalCellsSoFar = firstDayIndex + lastDay;
+            const remainingCells = 42 - totalCellsSoFar;
+            for (let i = 1; i <= remainingCells; i++) {
+                calendarDaysContainer.appendChild(createDayCell(i, true, year, month + 1));
+            }
+
+            lucide.createIcons();
+        }
+
+        function createDayCell(dayNum, isOffset, year, month) {
+            let cellDate = new Date(year, month, dayNum);
+            const dateStr = `${cellDate.getFullYear()}-${String(cellDate.getMonth() + 1).padStart(2, '0')}-${String(cellDate.getDate()).padStart(2, '0')}`;
+
+            const container = document.createElement('div');
+            const isToday = (cellDate.getFullYear() === 2026 && cellDate.getMonth() === 5 && cellDate.getDate() === 15);
+
+            const alarmsOnDay = window.alarmsState.filter(a => a.date === dateStr);
+
+            let borderClasses = isToday 
+                ? "border-2 border-primary-600 dark:border-primary-400 bg-primary-100/30 dark:bg-primary-950/20" 
+                : "border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/80 hover:bg-gray-50 dark:hover:bg-gray-700/50";
+                
+            let textClasses = isOffset 
+                ? "text-gray-300 dark:text-gray-600" 
+                : "text-gray-900 dark:text-white font-semibold";
+
+            if (isToday) {
+                textClasses += " text-primary-600 dark:text-primary-400 font-extrabold";
+            }
+
+            container.className = `min-h-[70px] sm:min-h-[85px] p-2.5 rounded-xl flex flex-col justify-between transition cursor-pointer relative ${borderClasses}`;
+            container.setAttribute('onclick', `setCalendarFormDate('${dateStr}')`);
+
+            container.innerHTML = `
+                <span class="text-xs ${textClasses}">${dayNum}</span>
+                <div class="space-y-1 overflow-hidden">
+                    ${alarmsOnDay.slice(0, 2).map(alarm => {
+                        const isDone = alarm.triggered;
+                        const badgeColor = isDone ? 'bg-gray-200 text-gray-500' : 'bg-primary-500 text-white';
+                        return `
+                            <div title="${escapeHTML(alarm.title)} - ${alarm.time}" class="text-[9px] px-1 py-0.5 rounded truncate ${badgeColor} leading-none font-medium">
+                                ${alarm.time} ${escapeHTML(alarm.title)}
+                            </div>
+                        `;
+                    }).join('')}
+                    ${alarmsOnDay.length > 2 ? `<div class="text-[8px] text-gray-400 dark:text-gray-500 text-center font-bold">+${alarmsOnDay.length - 2} more</div>` : ''}
+                </div>
+            `;
+
+            return container;
+        }
+
+        function setCalendarFormDate(dateStr) {
+            document.getElementById('event-date').value = dateStr;
+            showToast(`Selected date: ${dateStr}`, 'info');
+        }
+
+        function addCalendarEvent(event) {
+            event.preventDefault();
+
+            const title = document.getElementById('event-title').value.trim();
+            const date = document.getElementById('event-date').value;
+            const time = document.getElementById('event-time').value;
+            const desc = document.getElementById('event-desc').value.trim();
+
+            if (!title || !date || !time) return;
+
+            const newAlarm = {
+                id: 'alarm-' + Date.now(),
+                title,
+                date,
+                time,
+                desc,
+                triggered: false
+            };
+
+            window.alarmsState.push(newAlarm);
+            window.syncStateAndSave();
+            showToast("Reminder scheduled perfectly.");
+            
+            document.getElementById('event-title').value = '';
+            document.getElementById('event-desc').value = '';
+            resetDateInputs();
+
+            renderCalendar();
+            renderAlarmsList();
+        }
+
+        function deleteAlarm(id) {
+            window.alarmsState = window.alarmsState.filter(a => a.id !== id);
+            window.syncStateAndSave();
+            showToast("Alarm removed.");
+            renderCalendar();
+            renderAlarmsList();
+        }
+
+        function renderAlarmsList() {
+            const list = document.getElementById('calendar-events-list');
+            
+            const sortedAlarms = [...window.alarmsState].sort((a,b) => {
+                const combinedA = `${a.date}T${a.time}`;
+                const combinedB = `${b.date}T${b.time}`;
+                return new Date(combinedA) - new Date(combinedB);
+            });
+
+            document.getElementById('alarm-count').innerText = window.alarmsState.filter(a => !a.triggered).length;
+
+            if (sortedAlarms.length === 0) {
+                list.innerHTML = `
+                    <p class="text-xs text-gray-400 text-center py-6">No alarms on record.</p>
+                `;
+                return;
+            }
+
+            list.innerHTML = sortedAlarms.map(a => {
+                const statusLabel = a.triggered 
+                    ? '<span class="text-[9px] text-gray-400 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">Rung</span>' 
+                    : '<span class="text-[9px] text-primary-600 bg-primary-100/60 dark:bg-primary-950/50 dark:text-primary-300 px-1.5 py-0.5 rounded font-bold">Active</span>';
+
+                return `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/60 rounded-xl border border-gray-100 dark:border-gray-800">
+                        <div class="min-w-0 flex-1 pr-2">
+                            <div class="flex items-center gap-2 mb-0.5">
+                                <h5 class="text-xs font-bold text-gray-800 dark:text-white truncate">${escapeHTML(a.title)}</h5>
+                                ${statusLabel}
+                            </div>
+                            <span class="text-[10px] text-gray-400 block truncate">${a.desc || 'No description'}</span>
+                            <span class="text-[9px] text-primary-500 font-bold block mt-1">${a.date} @ ${a.time}</span>
+                        </div>
+                        <button onclick="deleteAlarm('${a.id}')" class="p-1 text-gray-400 hover:text-red-500 rounded hover:bg-gray-100 dark:hover:bg-gray-800">
+                            <i data-lucide="trash" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
