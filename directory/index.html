@@ -511,31 +511,28 @@
             const submitBtn = document.getElementById('submitBtn');
             const submitBtnText = document.getElementById('submitBtnText');
             const submitBtnIcon = document.getElementById('submitBtnIcon');
-            const toast = document.getElementById('toastNotification');
-            const toastIcon = document.getElementById('toastIcon');
-            const toastMessage = document.getElementById('toastMessage');
-
+        
             // 1. Check if SCRIPT_URL has been configured
             if (SCRIPT_URL === "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE" || SCRIPT_URL === "") {
                 showToast("Configuration missing. Please set up your Apps Script URL.", "error");
                 return;
             }
-
+        
             const payload = {
                 email: emailInput.value.trim(),
                 message: messageInput.value.trim()
             };
-
+        
             // 2. Set UI Elements to Loading State
             submitBtn.disabled = true;
             emailInput.disabled = true;
             messageInput.disabled = true;
             submitBtnText.textContent = "Sending...";
             submitBtnIcon.innerHTML = `<span class="spinner"></span>`;
-
+        
             try {
                 // 3. Make POST Request to Google Apps Script
-                const response = await fetch(SCRIPT_URL, {
+                await fetch(SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     cache: 'no-cache',
@@ -544,22 +541,14 @@
                     },
                     body: JSON.stringify(payload)
                 });
-
-                if (result.result === "success") {
+        
                 // Since 'no-cors' opaque responses cannot be read by JS, 
                 // we assume success if the fetch promise didn't throw a hard network error.
                 showToast("Message sent successfully! We will get back to you soon.", "success");
                 form.reset();
-
-                const result = await response.json();
-                
-                } else {
-                    // Error response returned by script
-                    console.error("API error:", result.message);
-                    showToast("Oops! We couldn't send your message. Please try again.", "error");
-                }
+        
             } catch (error) {
-                // Network, CORS, or connection failures
+                // This will only trigger if the user is offline or the URL is completely broken
                 console.error("Submission failed:", error);
                 showToast("Failed to connect. Please check your network connection.", "error");
             } finally {
