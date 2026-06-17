@@ -1315,7 +1315,7 @@
     });
 
     // --- GEMINI API INTEGRATION & EXPAT RETRY CONFIG ---
-    const apiKey = ""; // Left empty as required; provided dynamically at runtime
+    const apiKey = "AQ.Ab8RN6KbedT47ZrLMNWvVGEC3bGZkVvIPyP8P33ZgLZ7e2oVzw"; // Left empty as required; provided dynamically at runtime
 
     async function generateAISoundscape(userPrompt) {
       const aiBtn = document.getElementById('ai-gen-btn');
@@ -1382,7 +1382,7 @@ Limit the loop to 8000 milliseconds max. Play chords at structural points (e.g.,
 
       for (let attempt = 0; attempt < retries; attempt++) {
         try {
-          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
           const response = await fetch(endpoint, {
             method: "POST",
             headers: {
