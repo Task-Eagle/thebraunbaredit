@@ -1,0 +1,1772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Harmonicast Pro - Chord & Piano Workstation with AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            wood: {
+              50: '#fdfbfa',
+              100: '#f7f3f0',
+              200: '#eeded2',
+              300: '#e1c6b3',
+              400: '#c69875',
+              500: '#ab7047',
+              600: '#9b5e39',
+              700: '#814b2d',
+              800: '#5c3520',
+              900: '#3d2012',
+              950: '#261208',
+            },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Prevent default touch behaviors like double-tap zoom on iOS */
+    body {
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      background-color: #1a0b03;
+    }
+    .scrollbar-none::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-none {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    
+    /* Premium custom scrollbar matching the wood theme */
+    main::-webkit-scrollbar {
+      width: 6px;
+    }
+    main::-webkit-scrollbar-track {
+      background: #261208;
+      border-radius: 10px;
+    }
+    main::-webkit-scrollbar-thumb {
+      background: #ab7047;
+      border-radius: 10px;
+    }
+    main::-webkit-scrollbar-thumb:hover {
+      background: #c69875;
+    }
+
+    /* Piano key active and hover states */
+    .white-key {
+      background: linear-gradient(to bottom, #fcfaf2 0%, #f4eee1 80%, #e6dcc8 100%);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15), inset 0 -2px 0 #fff;
+      transition: transform 0.05s, background 0.05s, box-shadow 0.05s;
+    }
+    .white-key.active, .white-key.chord-highlight {
+      background: linear-gradient(to bottom, #c69875 0%, #ab7047 100%) !important;
+      color: #261208 !important;
+      transform: translateY(2px);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2), inset 0 2px 5px rgba(0,0,0,0.2), 0 0 10px rgba(198, 152, 117, 0.6);
+    }
+    .white-key.active-playing {
+      background: linear-gradient(to bottom, #eeded2 0%, #c69875 100%) !important;
+    }
+
+    .black-key {
+      background: linear-gradient(to bottom, #1a0f05 0%, #3e240c 70%, #150b03 100%);
+      box-shadow: 0 3px 5px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+      z-index: 10;
+      transition: transform 0.05s, background 0.05s, box-shadow 0.05s;
+    }
+    .black-key.active, .black-key.chord-highlight {
+      background: linear-gradient(to bottom, #9b5e39 0%, #5c3520 100%) !important;
+      color: #f7f3f0 !important;
+      transform: translateY(2px) scale(0.98);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.5), inset 0 1px 3px rgba(0,0,0,0.4), 0 0 10px rgba(198, 152, 117, 0.5);
+    }
+
+    /* Simple glowing key animations for Chord Cards */
+    .chord-card {
+      transition: all 0.15s ease-in-out;
+    }
+    .chord-card.key-active {
+      transform: scale(0.96);
+      box-shadow: 0 0 15px rgba(225, 198, 179, 0.6) !important;
+      background-color: #c69875 !important;
+      border-color: #e1c6b3 !important;
+    }
+    .chord-card.key-active span {
+      color: #261208 !important;
+    }
+
+    /* Wood panel texture styling */
+    .wood-gradient {
+      background: linear-gradient(135deg, #3d2012 0%, #261208 50%, #170a04 100%);
+    }
+    .wood-rim {
+      background: linear-gradient(to bottom, #5c3520, #3d2012);
+      border-bottom: 3px solid #1c0f05;
+    }
+
+    /* AI Loading animation glow */
+    @keyframes pulse-gold {
+      0%, 100% { box-shadow: 0 0 5px rgba(198, 152, 117, 0.4); }
+      50% { box-shadow: 0 0 20px rgba(198, 152, 117, 0.8); }
+    }
+    .ai-loading {
+      animation: pulse-gold 2s infinite;
+      border-color: #c69875 !important;
+    }
+  </style>
+</head>
+<body class="text-wood-100 font-sans h-screen w-screen overflow-hidden flex flex-col justify-between select-none">
+
+  <!-- TOP BRANDING & MASTHEAD -->
+  <header class="wood-rim px-4 py-2 flex items-center justify-between shadow-2xl relative z-20 shrink-0">
+    <div class="flex items-center space-x-3">
+      <div class="bg-wood-950 p-2 rounded-xl border border-wood-800/40 shadow-inner">
+        <svg class="w-5 h-5 text-wood-400" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-sm md:text-base font-black tracking-wider text-wood-100 flex items-center gap-1.5 leading-none">
+          HARMONICAST <span class="text-[10px] bg-wood-700 text-wood-200 px-1.5 py-0.5 rounded tracking-widest border border-wood-600">PRO AI</span>
+        </h1>
+        <p class="text-[9px] text-wood-400 font-semibold tracking-wider uppercase mt-1">AI-Powered Accompaniment Workstation</p>
+      </div>
+    </div>
+
+    <!-- Right Side Status Display -->
+    <div class="flex items-center gap-2 md:gap-3">
+      <div id="audio-indicator" class="flex items-center gap-1.5 text-xs text-wood-500 bg-wood-950/60 px-2.5 py-1 rounded-full border border-wood-800">
+        <span class="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse inline-block" id="status-dot"></span>
+        <span id="status-text" class="text-wood-400 font-mono text-[10px]">Tap to start</span>
+      </div>
+      
+      <!-- Toggle Mobile Layout View Mode -->
+      <button id="toggle-panels-btn" class="px-2.5 py-1.5 rounded-lg bg-wood-800 hover:bg-wood-700 text-wood-100 border border-wood-700 text-xs font-bold active:scale-95 transition-all flex items-center gap-1">
+        <span id="panels-toggle-icon">🎛️</span>
+        <span id="panels-toggle-text" class="hidden sm:inline">Focus Keyboard</span>
+      </button>
+
+      <!-- Quick Info button -->
+      <button id="info-btn" class="p-1.5 rounded-lg bg-wood-950/40 text-wood-400 hover:text-wood-100 border border-wood-900/30 active:scale-95 transition-all">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- WORKSPACE GRID -->
+  <main class="flex-1 w-full max-w-7xl mx-auto p-2 md:p-4 flex flex-col gap-2 md:gap-4 overflow-y-auto items-stretch">
+    
+    <!-- ROW 1: CONTROLS, CHORD CARD ACCOMPANIMENT PAD, & AI COMPACT COMPANION (COLLAPSIBLE FOR MOBILE) -->
+    <div id="controls-panel-group" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 shrink-0 transition-all duration-300 max-h-[1000px] overflow-hidden">
+      
+      <!-- PANEL A: SOUND CONFIG & DECK LOGISTICS -->
+      <section class="bg-wood-900 border border-wood-800 rounded-2xl p-3 md:p-4 flex flex-col justify-between gap-3 shadow-xl relative">
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-wood-400 via-wood-600 to-wood-400"></div>
+        
+        <!-- Controls Parameters -->
+        <div class="grid grid-cols-2 gap-3 mt-1">
+          <!-- Scale Selector -->
+          <div class="flex flex-col gap-1">
+            <label class="text-[10px] uppercase tracking-widest text-wood-400 font-bold">Scale / Key</label>
+            <div class="relative">
+              <select id="scale-select" class="w-full bg-wood-950 text-wood-200 border border-wood-700 rounded-lg py-1.5 px-2 text-xs focus:outline-none focus:border-wood-500 cursor-pointer appearance-none font-bold">
+                <option value="C">C (Do)</option>
+                <option value="D">D (Re)</option>
+                <option value="E">E (Mi)</option>
+                <option value="F">F (Fa)</option>
+                <option value="G">G (Sol)</option>
+                <option value="A">A (La)</option>
+                <option value="B">B (Ti)</option>
+              </select>
+              <div class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-wood-400 text-[10px]">▼</div>
+            </div>
+          </div>
+
+          <!-- Instrument Preset Dropdown -->
+          <div class="flex flex-col gap-1">
+            <label class="text-[10px] uppercase tracking-widest text-wood-400 font-bold">Voice Engine</label>
+            <div class="relative">
+              <select id="inst-select" class="w-full bg-wood-950 text-wood-200 border border-wood-700 rounded-lg py-1.5 px-2 text-xs focus:outline-none focus:border-wood-500 cursor-pointer appearance-none font-bold">
+                <optgroup label="Acoustic Models" class="bg-wood-950 text-wood-200">
+                  <option value="piano" selected>🎹 Acoustic Piano</option>
+                  <option value="guitar">🎸 Nylon Guitar</option>
+                  <option value="organ">💨 Drawbar Organ</option>
+                  <option value="strings">🎻 Symphonic Strings</option>
+                  <option value="brass">🎺 Orchestral Brass</option>
+                  <option value="wind">🍃 Woodwind Pad</option>
+                </optgroup>
+                <optgroup label="Analog Waveforms" class="bg-wood-950 text-wood-200">
+                  <option value="sine">◯ Warm Sine</option>
+                  <option value="triangle">△ Soft Triangle</option>
+                  <option value="sawtooth">⋀ Bright Sawtooth</option>
+                  <option value="square">⊓ Retro Square</option>
+                </optgroup>
+              </select>
+              <div class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-wood-400 text-[10px]">▼</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Master Tuning & Volume -->
+        <div class="grid grid-cols-2 gap-2 bg-wood-950/40 p-2 rounded-xl border border-wood-850">
+          <!-- Chords register Shift -->
+          <div class="flex flex-col justify-center">
+            <span class="text-[9px] uppercase tracking-wider text-wood-500 font-bold mb-1">Chord Octave</span>
+            <div class="flex gap-1 bg-wood-950 rounded-lg p-0.5 border border-wood-800">
+              <button id="oct-down" class="px-2 py-1 bg-wood-800 hover:bg-wood-700 active:bg-wood-600 rounded text-xs font-black transition-all">-</button>
+              <span id="oct-display" class="flex-1 text-[10px] font-mono font-bold text-wood-300 text-center flex items-center justify-center">Normal</span>
+              <button id="oct-up" class="px-2 py-1 bg-wood-800 hover:bg-wood-700 active:bg-wood-600 rounded text-xs font-black transition-all">+</button>
+            </div>
+          </div>
+
+          <!-- Keyboard register shift -->
+          <div class="flex flex-col justify-center">
+            <span class="text-[9px] uppercase tracking-wider text-wood-500 font-bold mb-1">Piano Octave</span>
+            <div class="flex gap-1 bg-wood-950 rounded-lg p-0.5 border border-wood-800">
+              <button id="kb-oct-down" class="px-2 py-1 bg-wood-800 hover:bg-wood-700 active:bg-wood-600 rounded text-xs font-black transition-all">-</button>
+              <span id="kb-oct-display" class="flex-1 text-[10px] font-mono font-bold text-wood-300 text-center flex items-center justify-center">OCT: 4</span>
+              <button id="kb-oct-up" class="px-2 py-1 bg-wood-800 hover:bg-wood-700 active:bg-wood-600 rounded text-xs font-black transition-all">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Volume slide controller -->
+        <div class="flex items-center gap-3 bg-wood-950/20 px-3 py-1.5 rounded-lg border border-wood-850/60">
+          <span class="text-[9px] uppercase text-wood-400 font-bold tracking-wider">Volume</span>
+          <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.7" class="w-full accent-wood-400 h-1 bg-wood-950 rounded-lg appearance-none cursor-pointer">
+        </div>
+      </section>
+
+      <!-- PANEL B: UNIFIED RECORDER DECK (LOOPER) -->
+      <section class="bg-wood-900 border border-wood-800 rounded-2xl p-3 md:p-4 flex flex-col justify-between gap-2.5 shadow-xl">
+        <div class="flex justify-between items-center">
+          <h2 class="text-xs uppercase tracking-widest text-wood-400 font-bold flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping inline-block" id="recorder-indicator-dot" style="display: none;"></span>
+            Looper Workstation
+          </h2>
+          <span id="loop-timer" class="text-[10px] font-mono text-wood-300 bg-wood-950/80 px-2 py-0.5 rounded border border-wood-800 font-bold">Empty / Max 16s</span>
+        </div>
+
+        <!-- Live Feed Display -->
+        <div class="bg-wood-950/70 rounded-lg p-2 border border-wood-850 text-center">
+          <p id="playing-notes" class="text-[11px] font-mono text-wood-400 flex items-center justify-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-wood-600"></span>
+            No signals. Tap keys below!
+          </p>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <!-- Record Button -->
+          <button id="rec-btn" class="flex flex-col items-center justify-center py-2 bg-red-950/80 hover:bg-red-900/90 active:bg-red-950 border border-red-900 text-red-300 rounded-lg transition-all focus:outline-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mb-0.5 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="12" r="6" />
+            </svg>
+            <span class="text-[9px] font-bold uppercase tracking-wider">Record</span>
+          </button>
+
+          <!-- Play/Pause Loop -->
+          <button id="play-btn" disabled class="flex flex-col items-center justify-center py-2 bg-emerald-950/80 hover:bg-emerald-900/90 active:bg-emerald-950 border border-emerald-900 text-emerald-300 rounded-lg transition-all focus:outline-none opacity-40 cursor-not-allowed">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mb-0.5 text-emerald-400" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            <span class="text-[9px] font-bold uppercase tracking-wider">Play Loop</span>
+          </button>
+
+          <!-- Stop -->
+          <button id="stop-btn" class="flex flex-col items-center justify-center py-2 bg-wood-800 hover:bg-wood-750 active:bg-wood-800 border border-wood-700 text-wood-200 rounded-lg transition-all focus:outline-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mb-0.5" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="6" width="12" height="12" rx="1.5" />
+            </svg>
+            <span class="text-[9px] font-bold uppercase tracking-wider">Stop</span>
+          </button>
+        </div>
+
+        <!-- Waveform Progress Visualizer -->
+        <div class="w-full bg-wood-950 h-2.5 rounded-full overflow-hidden border border-wood-850 p-[1.5px] flex items-center">
+          <div id="playback-bar" class="h-full bg-gradient-to-r from-wood-400 to-wood-300 rounded-full transition-all duration-75" style="width: 0%"></div>
+        </div>
+      </section>
+
+      <!-- PANEL C: CURRENT KEY INFORMATION DISPLAY -->
+      <section class="bg-wood-900/50 border border-wood-800 rounded-2xl p-3 md:p-4 flex flex-col justify-between shadow-xl">
+        <div class="border-b border-wood-800 pb-2 mb-2">
+          <span class="text-[10px] uppercase tracking-widest text-wood-400 font-bold block">Accompaniment Blueprint</span>
+          <span id="current-key-display" class="text-base font-extrabold text-wood-200">C Major Accompaniment</span>
+        </div>
+        
+        <div class="space-y-1.5 text-[11px] text-wood-300/90 leading-tight">
+          <p class="flex justify-between border-b border-wood-850/50 pb-1">
+            <span class="text-wood-500 font-medium">Tonic Center:</span>
+            <span id="meta-tonic" class="font-mono font-bold text-wood-300">C Major</span>
+          </p>
+          <p class="flex justify-between border-b border-wood-850/50 pb-1">
+            <span class="text-wood-500 font-medium">Active Cadence:</span>
+            <span class="font-mono font-bold text-amber-400/90">I - IV - V - vi - ii - iii</span>
+          </p>
+          <p class="flex justify-between">
+            <span class="text-wood-500 font-medium">Auto-Transposer:</span>
+            <span class="text-emerald-400/90 font-semibold">Active & Configured</span>
+          </p>
+        </div>
+
+        <div class="text-[9px] text-wood-500 bg-wood-950/40 border border-wood-850 p-1 rounded text-center mt-2 font-mono">
+          Click chord card ➜ Lights up piano keys!
+        </div>
+      </section>
+
+      <!-- PANEL D: AI SOUNDSCAPE COMPANION -->
+      <section id="ai-panel" class="bg-wood-900 border border-wood-800 rounded-2xl p-3 md:p-4 flex flex-col justify-between gap-2 shadow-xl relative transition-all duration-300">
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 via-amber-600 to-amber-400"></div>
+        
+        <div class="flex justify-between items-center mt-1">
+          <h2 class="text-xs uppercase tracking-widest text-amber-300 font-bold flex items-center gap-1">
+            ✨ AI Musicologist
+          </h2>
+          <span class="text-[8px] bg-amber-950 text-amber-400 px-1.5 py-0.5 rounded font-black uppercase tracking-wider border border-amber-900">Gemini 2.5</span>
+        </div>
+
+        <!-- Description Input -->
+        <div class="flex flex-col gap-1 my-1">
+          <input type="text" id="ai-mood-input" placeholder="e.g., moody cyberpunk rain, summer beach vibe" class="w-full bg-wood-950 text-wood-100 placeholder-wood-600 border border-wood-700 rounded-lg p-2 text-xs focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 font-medium transition-all">
+        </div>
+
+        <!-- Status & Insight Text -->
+        <div class="bg-wood-950/50 rounded-lg p-1.5 border border-wood-850 text-[10px] text-wood-400 leading-normal max-h-[50px] overflow-y-auto scrollbar-none font-medium">
+          <p id="ai-insight-text">Describe a scene above. I will transpose keys, switch engines, and program a custom loop sequence!</p>
+        </div>
+
+        <!-- AI Ignition Button -->
+        <button id="ai-gen-btn" class="w-full py-2 bg-gradient-to-r from-amber-500 to-wood-500 hover:from-amber-400 hover:to-wood-400 active:from-amber-600 active:to-wood-600 text-wood-950 rounded-lg font-black text-[11px] tracking-wider transition-all flex items-center justify-center gap-1 shadow-md">
+          ✨ Program AI Soundscape
+        </button>
+      </section>
+
+    </div>
+
+    <!-- ROW 2: COHESIVE CHORD PAD COMPONENT -->
+    <section class="bg-wood-900/40 border border-wood-800/80 rounded-2xl p-3 md:p-4 shadow-2xl flex flex-col justify-center shrink-0">
+      <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 md:gap-4" style="min-height: 90px;">
+        <!-- Tonic Chord (I) -->
+        <button data-chord-type="I" class="chord-card relative flex flex-col justify-between p-2.5 bg-wood-800 hover:bg-wood-750 border-2 border-wood-700 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer">
+          <div class="flex justify-between items-start w-full">
+            <span class="text-[9px] font-mono font-extrabold px-1.5 py-0.5 rounded bg-wood-950 text-wood-400 border border-wood-850">I</span>
+            <span class="text-[8px] text-wood-400 uppercase tracking-wider font-semibold">Major</span>
+          </div>
+          <span class="chord-name text-xl md:text-2xl font-black text-wood-100 my-1">C</span>
+          <span class="chord-notes text-[9px] font-mono text-wood-400 tracking-wider">C - E - G</span>
+        </button>
+
+        <!-- Subdominant Chord (IV) -->
+        <button data-chord-type="IV" class="chord-card relative flex flex-col justify-between p-2.5 bg-wood-800 hover:bg-wood-750 border-2 border-wood-700 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer">
+          <div class="flex justify-between items-start w-full">
+            <span class="text-[9px] font-mono font-extrabold px-1.5 py-0.5 rounded bg-wood-950 text-wood-400 border border-wood-850">IV</span>
+            <span class="text-[8px] text-wood-400 uppercase tracking-wider font-semibold">Major</span>
+          </div>
+          <span class="chord-name text-xl md:text-2xl font-black text-wood-100 my-1">F</span>
+          <span class="chord-notes text-[9px] font-mono text-wood-400 tracking-wider">F - A - C</span>
+        </button>
+
+        <!-- Dominant Chord (V) -->
+        <button data-chord-type="V" class="chord-card relative flex flex-col justify-between p-2.5 bg-wood-800 hover:bg-wood-750 border-2 border-wood-700 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer">
+          <div class="flex justify-between items-start w-full">
+            <span class="text-[9px] font-mono font-extrabold px-1.5 py-0.5 rounded bg-wood-950 text-wood-400 border border-wood-850">V</span>
+            <span class="text-[8px] text-wood-400 uppercase tracking-wider font-semibold">Major</span>
+          </div>
+          <span class="chord-name text-xl md:text-2xl font-black text-wood-100 my-1">G</span>
+          <span class="chord-notes text-[9px] font-mono text-wood-400 tracking-wider">G - B - D</span>
+        </button>
+
+        <!-- Relative Minor Chord (vi) -->
+        <button data-chord-type="vi" class="chord-card relative flex flex-col justify-between p-2.5 bg-wood-850 hover:bg-wood-800 border-2 border-wood-750 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer">
+          <div class="flex justify-between items-start w-full">
+            <span class="text-[9px] font-mono font-extrabold px-1.5 py-0.5 rounded bg-wood-950 text-wood-500 border border-wood-850">vi</span>
+            <span class="text-[8px] text-wood-400 uppercase tracking-wider font-semibold">Minor</span>
+          </div>
+          <span class="chord-name text-xl md:text-2xl font-black text-wood-100 my-1">Am</span>
+          <span class="chord-notes text-[9px] font-mono text-wood-400 tracking-wider">A - C - E</span>
+        </button>
+
+        <!-- Supertonic Minor Chord (ii) -->
+        <button data-chord-type="ii" class="chord-card relative flex flex-col justify-between p-2.5 bg-wood-850 hover:bg-wood-800 border-2 border-wood-750 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer">
+          <div class="flex justify-between items-start w-full">
+            <span class="text-[9px] font-mono font-extrabold px-1.5 py-0.5 rounded bg-wood-950 text-wood-500 border border-wood-850">ii</span>
+            <span class="text-[8px] text-wood-400 uppercase tracking-wider font-semibold">Minor</span>
+          </div>
+          <span class="chord-name text-xl md:text-2xl font-black text-wood-100 my-1">Dm</span>
+          <span class="chord-notes text-[9px] font-mono text-wood-400 tracking-wider">D - F - A</span>
+        </button>
+
+        <!-- Mediant Minor Chord (iii) -->
+        <button data-chord-type="iii" class="chord-card relative flex flex-col justify-between p-2.5 bg-wood-850 hover:bg-wood-800 border-2 border-wood-750 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer">
+          <div class="flex justify-between items-start w-full">
+            <span class="text-[9px] font-mono font-extrabold px-1.5 py-0.5 rounded bg-wood-950 text-wood-500 border border-wood-850">iii</span>
+            <span class="text-[8px] text-wood-400 uppercase tracking-wider font-semibold">Minor</span>
+          </div>
+          <span class="chord-name text-xl md:text-2xl font-black text-wood-100 my-1">Em</span>
+          <span class="chord-notes text-[9px] font-mono text-wood-400 tracking-wider">E - G - B</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ROW 3: CHROMATIC KEYBOARD PIANO BED -->
+    <section class="flex-1 wood-gradient relative flex p-2 rounded-2xl border-t border-wood-800 shadow-2xl overflow-hidden justify-center items-stretch min-h-[180px] md:min-h-[220px]">
+      <!-- Left Side-Panel Wooden Accent -->
+      <div class="w-2.5 sm:w-4 bg-gradient-to-r from-wood-950 via-wood-900 to-wood-950 rounded-l shadow-2xl border-r border-[#1a0f05]"></div>
+      
+      <!-- Keybed wrapper -->
+      <div id="keybed" class="relative flex-1 flex w-full h-full max-w-6xl mx-auto rounded-b shadow-inner">
+        <!-- White Keys Container -->
+        <div class="w-full h-full flex" id="white-keys-container">
+          <!-- Dynamically Rendered -->
+        </div>
+        <!-- Black Keys Container -->
+        <div class="absolute top-0 left-0 w-full h-[62%] pointer-events-none flex" id="black-keys-container">
+          <!-- Dynamically Rendered -->
+        </div>
+      </div>
+
+      <!-- Right Side-Panel Wooden Accent -->
+      <div class="w-2.5 sm:w-4 bg-gradient-to-l from-wood-950 via-wood-900 to-wood-950 rounded-r shadow-2xl border-l border-[#1a0f05]"></div>
+    </section>
+
+  </main>
+
+  <!-- QUICK TIPS AND BOTTOM STATUS INFO -->
+  <footer class="bg-wood-950 border-t border-wood-900 p-2 text-[10px] text-wood-500 flex justify-between items-center shrink-0">
+    <span class="flex items-center gap-1 overflow-hidden whitespace-nowrap text-ellipsis">🎹 QWERTY Keys: <b>[A S D F G H J K L ; ']</b> = Whites, <b>[Z X C V B N]</b> = Chords</span>
+    <span class="hidden md:inline">⚡ Touch optimized & polyphonic synthesizers active</span>
+    <span>Acoustic Engine v3.1</span>
+  </footer>
+
+  <!-- SMART MOBILE PORTRAIT DETECTOR -->
+  <div id="portrait-alert" class="fixed bottom-4 right-4 left-4 z-40 bg-wood-900/95 border-2 border-amber-600/60 rounded-xl p-3 shadow-2xl text-wood-100 flex flex-col sm:flex-row items-center justify-between gap-3 backdrop-blur-md hidden">
+    <div class="flex items-center gap-3">
+      <span class="text-xl">🔄</span>
+      <p class="text-xs font-semibold leading-snug">
+        Rotate your device horizontally for the best workstation keys interface, or tap to optimize!
+      </p>
+    </div>
+    <div class="flex gap-2 w-full sm:w-auto">
+      <button id="dismiss-portrait-alert" class="flex-1 sm:flex-none px-3 py-1 bg-wood-800 hover:bg-wood-700 text-wood-100 text-[11px] font-bold rounded-lg border border-wood-600 transition-all">
+        Dismiss
+      </button>
+      <button id="quick-focus-btn" class="flex-1 sm:flex-none px-3 py-1 bg-amber-500 hover:bg-amber-400 text-wood-950 text-[11px] font-black rounded-lg transition-all">
+        Focus Keyboard
+      </button>
+    </div>
+  </div>
+
+  <!-- PLAYGUIDE MODAL -->
+  <div id="info-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-wood-900 border-2 border-wood-700 rounded-2xl p-5 max-w-md w-full shadow-2xl text-wood-100 transform scale-95 transition-all duration-300">
+      <div class="flex items-center justify-between border-b border-wood-800 pb-2 mb-3">
+        <h3 class="text-sm font-bold tracking-wider text-wood-300 flex items-center gap-2">
+          <svg class="w-5 h-5 text-wood-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+          </svg>
+          Harmonicast Pro Playguide
+        </h3>
+        <button id="close-info-btn" class="text-wood-400 hover:text-wood-100 text-lg font-bold">&times;</button>
+      </div>
+      
+      <div class="space-y-3.5 text-xs text-wood-300 leading-relaxed">
+        <p>Welcome to <strong>Harmonicast Pro AI</strong>! This workstation combines vintage chord accompaniment pad triggers with a fully playable multi-touch chromatic keybed.</p>
+        
+        <div>
+          <span class="font-bold text-wood-200 block mb-0.5">🎮 Interface Layout:</span>
+          <ul class="list-disc list-inside space-y-1 pl-1">
+            <li><strong>✨ AI Soundscape Composer:</strong> Enter any vibe or location. The AI automatically adjusts keys, transposes octaves, and programs sequences!</li>
+            <li><strong>🎛️ Focus Keyboard Mode:</strong> Tap "Focus Keyboard" in the header to instantly toggle top panels on/off. Perfect for small touchscreens!</li>
+            <li><strong>Interactive Keybed Highlight:</strong> Tapping a Chord Card automatically highlights its constituent triad notes on the virtual piano!</li>
+            <li><strong>Unified Looper:</strong> Turn on <b>Record</b> to record both your manual key taps and chord pad inputs (Max 16 seconds).</li>
+          </ul>
+        </div>
+
+        <div>
+          <span class="font-bold text-wood-200 block mb-0.5">⌨️ Desktop Computer Keys:</span>
+          <div class="grid grid-cols-2 gap-2 font-mono text-center text-[10px] text-wood-300">
+            <div class="bg-wood-950 p-1.5 rounded border border-wood-800">
+              <span class="text-amber-400 font-bold block">A S D F G H J K L ; '</span>
+              White Keys (C to F')
+            </div>
+            <div class="bg-wood-950 p-1.5 rounded border border-wood-800">
+              <span class="text-amber-400 font-bold block">W E &nbsp; T Y U &nbsp; O P</span>
+              Black Keys
+            </div>
+            <div class="bg-wood-950 p-1.5 rounded border border-wood-800 col-span-2 mt-1">
+              <span class="text-emerald-400 font-bold block">Z X C V B N</span>
+              Chord Pads (I, IV, V, vi, ii, iii)
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <button id="dismiss-modal-btn" class="mt-5 w-full py-2 bg-wood-500 hover:bg-wood-400 active:bg-wood-600 text-wood-950 rounded-lg font-extrabold tracking-wide transition-all shadow-md">
+        Initialize Synthesizers
+      </button>
+    </div>
+  </div>
+
+  <!-- SOUND ENGINE & APPLICATION INTEGRATION SCRIPT -->
+  <script>
+    // --- APP STATES ---
+    let scale = 'C';
+    let instrument = 'piano'; // "piano", "guitar", "organ", "strings", "brass", "wind", "sine", "triangle", "sawtooth", "square"
+    let chordOctaveOffset = 0; // -1, 0, 1
+    let currentOctave = 4; // C4 is middle C on piano
+    let volume = 0.7;
+
+    // Recording and Looper state
+    let isRecording = false;
+    let isPlayingLoop = false;
+    let recordStartTime = 0;
+    let recordedEvents = []; // Unified Array of { type: 'chord' | 'note', value: id, step: number, timestamp }
+    let loopDuration = 0;
+    let playbackTimeoutIds = [];
+    let loopIntervalId = null;
+    let progressBarIntervalId = null;
+    let recordingTimerIntervalId = null;
+    let playbackStartTime = 0;
+
+    // Active playing tracks map for release tracking (avoiding double triggers & clicks)
+    const activeOscillators = {};
+
+    // --- MUSIC FORMULAS ---
+    const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+    // Standard triad degrees based on the chosen Scale root
+    const SCALE_DEGREES = {
+      I:   { type: 'Major', rootOffset: 0,  semitones: [0, 4, 7] },
+      ii:  { type: 'Minor', rootOffset: 2,  semitones: [0, 3, 7] },
+      iii: { type: 'Minor', rootOffset: 4,  semitones: [0, 3, 7] },
+      IV:  { type: 'Major', rootOffset: 5,  semitones: [0, 4, 7] },
+      V:   { type: 'Major', rootOffset: 7,  semitones: [0, 4, 7] },
+      vi:  { type: 'Minor', rootOffset: 9,  semitones: [0, 3, 7] }
+    };
+
+    const SCALE_ROOTS = {
+      'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
+    };
+
+    // Piano key specifications (full octave starting from standard white keys)
+    const whiteNotes = [
+      { note: 'C', step: 0, key: 'a' },
+      { note: 'D', step: 2, key: 's' },
+      { note: 'E', step: 4, key: 'd' },
+      { note: 'F', step: 5, key: 'f' },
+      { note: 'G', step: 7, key: 'g' },
+      { note: 'A', step: 9, key: 'h' },
+      { note: 'B', step: 11, key: 'j' },
+      { note: 'C_high', step: 12, key: 'k' },
+      { note: 'D_high', step: 14, key: 'l' },
+      { note: 'E_high', step: 16, key: ';' },
+      { note: 'F_high', step: 17, key: "'" }
+    ];
+
+    const blackNotes = [
+      { note: 'C#', step: 1, key: 'w', afterIndex: 0 },
+      { note: 'D#', step: 3, key: 'e', afterIndex: 1 },
+      { note: 'F#', step: 6, key: 't', afterIndex: 3 },
+      { note: 'G#', step: 8, key: 'y', afterIndex: 4 },
+      { note: 'A#', step: 10, key: 'u', afterIndex: 5 },
+      { note: 'C#_high', step: 13, key: 'o', afterIndex: 7 },
+      { note: 'D#_high', step: 15, key: 'p', afterIndex: 8 }
+    ];
+
+    const keyMap = {};
+    whiteNotes.forEach(n => keyMap[n.key] = { id: n.note, step: n.step });
+    blackNotes.forEach(n => keyMap[n.key] = { id: n.note, step: n.step });
+
+    // --- WEB AUDIO API & SYNTH ---
+    let audioCtx = null;
+    let mainGain = null;
+    let limiter = null;
+
+    function initAudio() {
+      if (audioCtx) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      // Master limiter configuration to prevent distortion on polyphonic chords
+      limiter = audioCtx.createDynamicsCompressor();
+      limiter.threshold.setValueAtTime(-12, audioCtx.currentTime);
+      limiter.knee.setValueAtTime(3, audioCtx.currentTime);
+      limiter.ratio.setValueAtTime(12, audioCtx.currentTime);
+      limiter.attack.setValueAtTime(0.003, audioCtx.currentTime);
+      limiter.release.setValueAtTime(0.08, audioCtx.currentTime);
+
+      mainGain = audioCtx.createGain();
+      mainGain.gain.setValueAtTime(volume, audioCtx.currentTime);
+
+      // Connect nodes: Synth Voice -> Master Gain -> Limiter -> Output
+      mainGain.connect(limiter);
+      limiter.connect(audioCtx.destination);
+      
+      document.getElementById('status-dot').className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block';
+      document.getElementById('status-text').innerText = 'Ready';
+      document.getElementById('status-text').className = 'text-emerald-400 font-mono text-[10px]';
+    }
+
+    // Convert MIDI pitch code to frequency
+    function midiToFreq(note) {
+      return 440 * Math.pow(2, (note - 69) / 12);
+    }
+
+    // Convert piano step values + offset octave to literal MIDI number
+    function getPianoMidiPitch(step, octave) {
+      const baseMidiForOctave = (octave + 1) * 12; // octave 4 -> C4 (60)
+      return baseMidiForOctave + step;
+    }
+
+    // Get MIDI pitch array for selected Chord degree
+    function getChordMidiPitches(degreeKey) {
+      const scaleRootMidi = 48 + SCALE_ROOTS[scale]; // base on index
+      const degree = SCALE_DEGREES[degreeKey];
+      const chordRootMidi = scaleRootMidi + degree.rootOffset;
+      const octaveShift = chordOctaveOffset * 12;
+
+      return degree.semitones.map(offset => {
+        let pitch = chordRootMidi + offset + octaveShift;
+        while (pitch < 36) pitch += 12;
+        while (pitch > 84) pitch -= 12;
+        return pitch;
+      });
+    }
+
+    // Translate scale tonic + degree structure to literal chord name (e.g. C Key + vi degree = Am)
+    function getChordName(degreeKey) {
+      const scaleBaseIndex = SCALE_ROOTS[scale];
+      const degree = SCALE_DEGREES[degreeKey];
+      const rootIndex = (scaleBaseIndex + degree.rootOffset) % 12;
+      const name = NOTE_NAMES[rootIndex];
+      return degree.type === 'Minor' ? `${name}m` : name;
+    }
+
+    // Get note display string representation of chord
+    function getChordLiteralNotes(degreeKey) {
+      const scaleRootMidi = 48 + SCALE_ROOTS[scale];
+      const degree = SCALE_DEGREES[degreeKey];
+      const chordRootMidi = scaleRootMidi + degree.rootOffset;
+
+      return degree.semitones.map(offset => {
+        const index = (chordRootMidi + offset) % 12;
+        return NOTE_NAMES[index];
+      }).join(' - ');
+    }
+
+    // Highlight keyboard keys that are being played in a chord
+    function highlightChordOnPiano(degreeKey, isPressed) {
+      const scaleRootMidi = 48 + SCALE_ROOTS[scale];
+      const degree = SCALE_DEGREES[degreeKey];
+      const chordRootMidi = scaleRootMidi + degree.rootOffset;
+
+      // Map the notes of the chord (e.g., C, E, G)
+      const chordNotes = degree.semitones.map(offset => {
+        return NOTE_NAMES[(chordRootMidi + offset) % 12];
+      });
+
+      // Traverse all physical white and black keys in UI
+      const keys = document.querySelectorAll('.white-key, .black-key');
+      keys.forEach(keyEl => {
+        const keyNoteId = keyEl.dataset.note;
+        if (!keyNoteId) return;
+
+        // Clean name (e.g., 'C_high' to 'C')
+        const baseNoteName = keyNoteId.split('_')[0];
+        
+        if (chordNotes.includes(baseNoteName)) {
+          if (isPressed) {
+            keyEl.classList.add('chord-highlight');
+          } else {
+            keyEl.classList.remove('chord-highlight');
+          }
+        }
+      });
+    }
+
+    // --- SYNCHRONIZED HARMONIC SOUND PIPELINES ---
+    function playHarmonicTone(freq, isChord, noteIdentifierKey) {
+      initAudio();
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const startTime = audioCtx.currentTime;
+
+      // Define standard synth types or custom physical instruments models
+      if (['sine', 'triangle', 'sawtooth', 'square'].includes(instrument)) {
+        synthesizeClassicWave(freq, startTime, instrument, noteIdentifierKey);
+      } else {
+        switch (instrument) {
+          case 'piano':
+            synthesizePiano(freq, startTime, noteIdentifierKey);
+            break;
+          case 'guitar':
+            synthesizeGuitar(freq, startTime, noteIdentifierKey);
+            break;
+          case 'organ':
+            synthesizeOrgan(freq, startTime, noteIdentifierKey);
+            break;
+          case 'strings':
+            synthesizeStrings(freq, startTime, noteIdentifierKey);
+            break;
+          case 'brass':
+            synthesizeBrass(freq, startTime, noteIdentifierKey);
+            break;
+          case 'wind':
+            synthesizeWind(freq, startTime, noteIdentifierKey);
+            break;
+        }
+      }
+    }
+
+    // Clean tracking support for non-chord taps
+    function stopHarmonicTone(noteIdentifierKey) {
+      const activeNode = activeOscillators[noteIdentifierKey];
+      if (activeNode) {
+        const currentTime = audioCtx ? audioCtx.currentTime : 0;
+        if (audioCtx) {
+          // Soft ramp release
+          try {
+            activeNode.gainNode.gain.cancelScheduledValues(currentTime);
+            activeNode.gainNode.gain.setValueAtTime(activeNode.gainNode.gain.value, currentTime);
+            activeNode.gainNode.gain.exponentialRampToValueAtTime(0.0001, currentTime + 0.3);
+            
+            const oscList = activeNode.oscillators || [];
+            oscList.forEach(osc => {
+              setTimeout(() => {
+                try { osc.stop(); osc.disconnect(); } catch(e) {}
+              }, 350);
+            });
+          } catch(err) {}
+        }
+        delete activeOscillators[noteIdentifierKey];
+      }
+    }
+
+    // Save playing node context to stop on key releases
+    function registerActiveNodes(noteIdentifierKey, oscArray, gainNode) {
+      activeOscillators[noteIdentifierKey] = {
+        oscillators: oscArray,
+        gainNode: gainNode
+      };
+    }
+
+    // --- INSTRUMENT MODELLING FORMULAS ---
+
+    function synthesizeClassicWave(freq, startTime, type, key) {
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      // Smooth attack decay envelope
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(0.25, startTime + 0.015);
+      gainNode.gain.setTargetAtTime(0.12, startTime + 0.02, 0.45);
+
+      osc.connect(gainNode);
+      gainNode.connect(mainGain);
+      osc.start(startTime);
+
+      registerActiveNodes(key, [osc], gainNode);
+    }
+
+    function synthesizePiano(freq, startTime, key) {
+      const osc1 = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      osc1.type = 'triangle';
+      osc2.type = 'sine';
+
+      // Thick detuned pair
+      osc1.frequency.setValueAtTime(freq, startTime);
+      osc2.frequency.setValueAtTime(freq * 1.002, startTime);
+
+      // Classic piano decaying structure
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(0.28, startTime + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 2.0);
+
+      osc1.connect(gainNode);
+      osc2.connect(gainNode);
+      gainNode.connect(mainGain);
+
+      osc1.start(startTime);
+      osc2.start(startTime);
+
+      registerActiveNodes(key, [osc1, osc2], gainNode);
+    }
+
+    function synthesizeGuitar(freq, startTime, key) {
+      const osc = audioCtx.createOscillator();
+      const transientNoise = audioCtx.createBufferSource();
+      const gainNode = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      // Plucked White Noise transient
+      const bufferSize = audioCtx.sampleRate * 0.04;
+      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      transientNoise.buffer = noiseBuffer;
+
+      // Warm acoustic filter roll-off
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(1000, startTime);
+      filter.frequency.exponentialRampToValueAtTime(300, startTime + 0.4);
+
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(0.35, startTime + 0.005);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 1.5);
+
+      osc.connect(filter);
+      transientNoise.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(mainGain);
+
+      osc.start(startTime);
+      transientNoise.start(startTime);
+
+      registerActiveNodes(key, [osc, transientNoise], gainNode);
+    }
+
+    function synthesizeOrgan(freq, startTime, key) {
+      const harmonics = [1, 2, 3, 4];
+      const gains = [0.18, 0.12, 0.07, 0.04];
+      const oscillatorsList = [];
+
+      const masterOrganGain = audioCtx.createGain();
+      masterOrganGain.gain.setValueAtTime(0, startTime);
+      masterOrganGain.gain.linearRampToValueAtTime(1.0, startTime + 0.02);
+      masterOrganGain.gain.setTargetAtTime(0.8, startTime + 0.03, 0.5);
+
+      harmonics.forEach((h, idx) => {
+        const osc = audioCtx.createOscillator();
+        const subGain = audioCtx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq * h, startTime);
+
+        subGain.gain.setValueAtTime(gains[idx], startTime);
+
+        osc.connect(subGain);
+        subGain.connect(masterOrganGain);
+        osc.start(startTime);
+
+        oscillatorsList.push(osc);
+      });
+
+      masterOrganGain.connect(mainGain);
+      registerActiveNodes(key, oscillatorsList, masterOrganGain);
+    }
+
+    // Strings Pad synthesizers (orchestral mode)
+    function synthesizeStrings(freq, startTime, key) {
+      const osc1 = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+
+      osc1.type = 'sawtooth';
+      osc2.type = 'sawtooth';
+
+      osc1.frequency.setValueAtTime(freq - 1.2, startTime);
+      osc2.frequency.setValueAtTime(freq + 1.2, startTime);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(900, startTime);
+
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(0.15, startTime + 0.35);
+      gainNode.gain.setTargetAtTime(0.12, startTime + 0.4, 1.2);
+
+      osc1.connect(filter);
+      osc2.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(mainGain);
+
+      osc1.start(startTime);
+      osc2.start(startTime);
+
+      registerActiveNodes(key, [osc1, osc2], gainNode);
+    }
+
+    function synthesizeBrass(freq, startTime, key) {
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(250, startTime);
+      filter.frequency.exponentialRampToValueAtTime(2200, startTime + 0.12);
+      filter.frequency.exponentialRampToValueAtTime(550, startTime + 0.9);
+
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(0.18, startTime + 0.08);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 1.5);
+
+      osc.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(mainGain);
+
+      osc.start(startTime);
+      registerActiveNodes(key, [osc], gainNode);
+    }
+
+    function synthesizeWind(freq, startTime, key) {
+      const osc = audioCtx.createOscillator();
+      const subOsc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+
+      osc.type = 'sine';
+      subOsc.type = 'triangle';
+
+      osc.frequency.setValueAtTime(freq, startTime);
+      subOsc.frequency.setValueAtTime(freq * 0.5, startTime);
+
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(freq * 1.3, startTime);
+      filter.Q.setValueAtTime(0.8, startTime);
+
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(0.2, startTime + 0.25);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 1.8);
+
+      osc.connect(filter);
+      subOsc.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(mainGain);
+
+      osc.start(startTime);
+      subOsc.start(startTime);
+
+      registerActiveNodes(key, [osc, subOsc], gainNode);
+    }
+
+    // --- TRIGGER HANDLERS ---
+
+    // Trigger full Chord triad
+    function triggerChordOn(degreeKey) {
+      initAudio();
+      
+      const pitches = getChordMidiPitches(degreeKey);
+      pitches.forEach((p, idx) => {
+        const freq = midiToFreq(p);
+        playHarmonicTone(freq, true, `chord-${degreeKey}-${idx}`);
+      });
+
+      highlightChordOnPiano(degreeKey, true);
+
+      // Record sequence capture
+      if (isRecording) {
+        recordedEvents.push({
+          type: 'chord',
+          value: degreeKey,
+          timestamp: performance.now() - recordStartTime
+        });
+      }
+
+      // Update Live display
+      document.getElementById('playing-notes').innerHTML = `
+        <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+        <span class="text-amber-200 font-bold">Chord: ${getChordName(degreeKey)} (${getChordLiteralNotes(degreeKey)})</span>
+      `;
+    }
+
+    // Terminate Chord triad elements
+    function triggerChordOff(degreeKey) {
+      for (let idx = 0; idx < 3; idx++) {
+        stopHarmonicTone(`chord-${degreeKey}-${idx}`);
+      }
+      highlightChordOnPiano(degreeKey, false);
+      resetNoteStatusDisplay();
+    }
+
+    // Trigger individual manual piano notes
+    function triggerNoteOn(element, noteId, step) {
+      initAudio();
+      
+      if (!element.classList.contains('active-playing')) {
+        element.classList.add('active-playing');
+        
+        const pitch = getPianoMidiPitch(step, currentOctave);
+        const freq = midiToFreq(pitch);
+        playHarmonicTone(freq, false, `note-${noteId}`);
+
+        // Record context loop
+        if (isRecording) {
+          recordedEvents.push({
+            type: 'note',
+            value: noteId,
+            step: step,
+            timestamp: performance.now() - recordStartTime
+          });
+        }
+
+        // Live display updating
+        const readableName = noteId.replace('_high', "'").replace('#', '♯');
+        document.getElementById('playing-notes').innerHTML = `
+          <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+          <span class="text-emerald-300 font-bold">Note: ${readableName} (${freq.toFixed(1)} Hz)</span>
+        `;
+      }
+    }
+
+    function triggerNoteOff(element, noteId) {
+      if (element.classList.contains('active-playing')) {
+        element.classList.remove('active-playing');
+        stopHarmonicTone(`note-${noteId}`);
+        resetNoteStatusDisplay();
+      }
+    }
+
+    function resetNoteStatusDisplay() {
+      const activeKeys = Object.keys(activeOscillators);
+      if (activeKeys.length === 0) {
+        document.getElementById('playing-notes').innerHTML = `
+          <span class="inline-block w-1.5 h-1.5 rounded-full bg-wood-600"></span>
+          <span>Ready to play. Tap keys or trigger chords!</span>
+        `;
+      }
+    }
+
+    // --- LOOPER DECK REPLAY ENGINES ---
+
+    function startRecording() {
+      if (isPlayingLoop) stopPlayback();
+
+      initAudio();
+      isRecording = true;
+      recordedEvents = [];
+      recordStartTime = performance.now();
+
+      document.getElementById('rec-btn').classList.add('animate-pulse', 'bg-red-600', 'text-white');
+      document.getElementById('recorder-indicator-dot').style.display = 'inline-block';
+
+      let elapsed = 0;
+      clearInterval(recordingTimerIntervalId);
+      recordingTimerIntervalId = setInterval(() => {
+        elapsed = (performance.now() - recordStartTime) / 1000;
+        if (elapsed >= 16.0) { // Safety ceiling lock at 16 seconds
+          stopRecording();
+        } else {
+          document.getElementById('loop-timer').innerText = `${elapsed.toFixed(2)}s / 16s`;
+        }
+      }, 50);
+
+      document.getElementById('play-btn').disabled = true;
+      document.getElementById('play-btn').classList.add('opacity-40');
+    }
+
+    function stopRecording() {
+      if (!isRecording) return;
+      isRecording = false;
+      clearInterval(recordingTimerIntervalId);
+
+      loopDuration = performance.now() - recordStartTime;
+
+      document.getElementById('rec-btn').classList.remove('animate-pulse', 'bg-red-600', 'text-white');
+      document.getElementById('recorder-indicator-dot').style.display = 'none';
+      document.getElementById('loop-timer').innerText = `${(loopDuration/1000).toFixed(2)}s Saved`;
+
+      if (recordedEvents.length > 0) {
+        document.getElementById('play-btn').disabled = false;
+        document.getElementById('play-btn').classList.remove('opacity-40', 'cursor-not-allowed');
+      }
+    }
+
+    function playLoop() {
+      if (recordedEvents.length === 0) return;
+      if (isRecording) stopRecording();
+      if (isPlayingLoop) stopPlayback();
+
+      initAudio();
+      isPlayingLoop = true;
+      playbackStartTime = performance.now();
+
+      document.getElementById('play-btn').classList.add('bg-emerald-600', 'text-white');
+
+      // Schedule loops
+      const runTimeline = () => {
+        playbackStartTime = performance.now();
+        recordedEvents.forEach(evt => {
+          const timeoutId = setTimeout(() => {
+            if (evt.type === 'chord') {
+              // Fire Chord trigger visual cards and audio
+              const card = document.querySelector(`.chord-card[data-chord-type="${evt.value}"]`);
+              if (card) {
+                card.classList.add('key-active');
+                triggerChordOn(evt.value);
+                setTimeout(() => {
+                  card.classList.remove('key-active');
+                  triggerChordOff(evt.value);
+                }, 400);
+              }
+            } else if (evt.type === 'note') {
+              // Fire Piano key trigger visual notes and audio
+              const keyEl = document.getElementById(`key-${evt.value}`);
+              if (keyEl) {
+                triggerNoteOn(keyEl, evt.value, evt.step);
+                setTimeout(() => {
+                  triggerNoteOff(keyEl, evt.value);
+                }, 350);
+              }
+            }
+          }, evt.timestamp);
+
+          playbackTimeoutIds.push(timeoutId);
+        });
+      };
+
+      runTimeline();
+      loopIntervalId = setInterval(runTimeline, loopDuration);
+
+      // Handle timeline progress slider animation
+      clearInterval(progressBarIntervalId);
+      progressBarIntervalId = setInterval(() => {
+        const timePassed = (performance.now() - playbackStartTime) % loopDuration;
+        const pct = (timePassed / loopDuration) * 100;
+        document.getElementById('playback-bar').style.width = `${pct}%`;
+      }, 30);
+    }
+
+    function stopPlayback() {
+      isPlayingLoop = false;
+      clearInterval(loopIntervalId);
+      clearInterval(progressBarIntervalId);
+      playbackTimeoutIds.forEach(id => clearTimeout(id));
+      playbackTimeoutIds = [];
+
+      document.getElementById('play-btn').classList.remove('bg-emerald-600', 'text-white');
+      document.getElementById('playback-bar').style.width = '0%';
+    }
+
+    // --- INTERACTIVE KEYBOARD RENDERING ---
+    function renderKeys() {
+      const whiteContainer = document.getElementById('white-keys-container');
+      const blackContainer = document.getElementById('black-keys-container');
+
+      whiteContainer.innerHTML = '';
+      blackContainer.innerHTML = '';
+
+      // Render white keys structure
+      whiteNotes.forEach((n) => {
+        const keyElement = document.createElement('div');
+        keyElement.id = `key-${n.note}`;
+        keyElement.className = 'white-key relative flex-1 h-full rounded-b-md mx-[1.5px] first:ml-0 last:mr-0 flex flex-col justify-end pb-3 items-center cursor-pointer select-none';
+        
+        keyElement.dataset.note = n.note;
+        keyElement.dataset.step = n.step;
+
+        const labelName = n.note.replace('_high', "'");
+        keyElement.innerHTML = `
+          <span class="text-stone-400 text-[8px] font-bold select-none uppercase mb-1 pointer-events-none">${n.key.toUpperCase()}</span>
+          <span class="text-stone-800 text-[10px] md:text-xs font-black select-none pointer-events-none">${labelName}</span>
+        `;
+
+        bindPianoEvents(keyElement, n.note, n.step);
+        whiteContainer.appendChild(keyElement);
+      });
+
+      // Render absolute aligned black keys overlap positions
+      const whiteKeyCount = whiteNotes.length;
+      blackNotes.forEach((n) => {
+        const blackKeyEl = document.createElement('div');
+        blackKeyEl.id = `key-${n.note}`;
+
+        const leftPercentage = ((n.afterIndex + 1) / whiteKeyCount) * 100;
+        blackKeyEl.className = 'black-key absolute h-full rounded-b-sm cursor-pointer pointer-events-auto flex flex-col justify-end pb-2 items-center';
+        blackKeyEl.style.width = `${(1 / whiteKeyCount) * 72}%`;
+        blackKeyEl.style.left = `calc(${leftPercentage}% - ${(1 / whiteKeyCount) * 36}%)`;
+
+        blackKeyEl.dataset.note = n.note;
+        blackKeyEl.dataset.step = n.step;
+
+        const displayName = n.note.replace('_high', "'").replace('#', '♯');
+        blackKeyEl.innerHTML = `
+          <span class="text-amber-500/60 text-[7px] font-bold select-none uppercase mb-1.5 pointer-events-none">${n.key.toUpperCase()}</span>
+          <span class="text-amber-100 text-[8px] md:text-[9px] font-bold select-none pointer-events-none">${displayName}</span>
+        `;
+
+        bindPianoEvents(blackKeyEl, n.note, n.step);
+        blackContainer.appendChild(blackKeyEl);
+      });
+    }
+
+    // Slide-to-play multi-touch event registry
+    const trackedPointers = {};
+
+    function bindPianoEvents(element, noteId, step) {
+      // Mouse listeners
+      element.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        initAudio();
+        triggerNoteOn(element, noteId, step);
+      });
+
+      element.addEventListener('mouseenter', (e) => {
+        if (e.buttons === 1) {
+          triggerNoteOn(element, noteId, step);
+        }
+      });
+
+      element.addEventListener('mouseleave', () => {
+        triggerNoteOff(element, noteId);
+      });
+
+      element.addEventListener('mouseup', () => {
+        triggerNoteOff(element, noteId);
+      });
+
+      // Multi-touch gestures listeners
+      element.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        initAudio();
+        Array.from(e.changedTouches).forEach(touch => {
+          trackedPointers[touch.identifier] = element.id;
+          triggerNoteOn(element, noteId, step);
+        });
+      }, { passive: false });
+    }
+
+    // Slide-over multi-key gliding support
+    window.addEventListener('touchmove', (e) => {
+      Array.from(e.touches).forEach(touch => {
+        const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (!elementUnderTouch) return;
+
+        let keyElement = elementUnderTouch;
+        while (keyElement && !keyElement.classList.contains('white-key') && !keyElement.classList.contains('black-key')) {
+          keyElement = keyElement.parentElement;
+        }
+
+        if (keyElement) {
+          const previousKeyId = trackedPointers[touch.identifier];
+          if (previousKeyId !== keyElement.id) {
+            if (previousKeyId) {
+              const prevEl = document.getElementById(previousKeyId);
+              if (prevEl) triggerNoteOff(prevEl, prevEl.dataset.note);
+            }
+            trackedPointers[touch.identifier] = keyElement.id;
+            triggerNoteOn(keyElement, keyElement.dataset.note, parseInt(keyElement.dataset.step));
+          }
+        }
+      });
+    }, { passive: false });
+
+    window.addEventListener('touchend', (e) => {
+      Array.from(e.changedTouches).forEach(touch => {
+        const keyId = trackedPointers[touch.identifier];
+        if (keyId) {
+          const prevEl = document.getElementById(keyId);
+          if (prevEl) triggerNoteOff(prevEl, prevEl.dataset.note);
+          delete trackedPointers[touch.identifier];
+        }
+      });
+    });
+
+    window.addEventListener('touchcancel', (e) => {
+      Array.from(e.changedTouches).forEach(touch => {
+        const keyId = trackedPointers[touch.identifier];
+        if (keyId) {
+          const prevEl = document.getElementById(keyId);
+          if (prevEl) triggerNoteOff(prevEl, prevEl.dataset.note);
+          delete trackedPointers[touch.identifier];
+        }
+      });
+    });
+
+    // --- INTERFACE TRANSFORMATION ACTIONS ---
+    function updateChordInterface() {
+      document.getElementById('current-key-display').innerText = `${scale} Major Accompaniment`;
+      document.getElementById('meta-tonic').innerText = `${scale} Diatonic Major`;
+
+      document.querySelectorAll('.chord-card').forEach(card => {
+        const degreeKey = card.getAttribute('data-chord-type');
+        const chordName = getChordName(degreeKey);
+        const chordNotes = getChordLiteralNotes(degreeKey);
+
+        card.querySelector('.chord-name').innerText = chordName;
+        card.querySelector('.chord-notes').innerText = chordNotes;
+      });
+    }
+
+    // Computer QWERTY key tracker
+    const keysCurrentlyPressed = {};
+
+    // Map for Chord Pads (Z, X, C, V, B, N)
+    const chordKeyMap = {
+      'z': 'I',
+      'x': 'IV',
+      'c': 'V',
+      'v': 'vi',
+      'b': 'ii',
+      'n': 'iii'
+    };
+
+    window.addEventListener('keydown', (e) => {
+      if (e.repeat) return;
+      
+      // 1. Check for Chord Pads (Z, X, C, V, B, N)
+      const chordKey = e.key.toLowerCase();
+      const chordDegree = chordKeyMap[chordKey];
+      
+      if (chordDegree) {
+        e.preventDefault(); // Prevent default browser actions
+        initAudio();
+        
+        // Trigger Audio
+        triggerChordOn(chordDegree);
+        
+        // Visual Feedback: Find the corresponding card and add active class
+        const card = document.querySelector(`.chord-card[data-chord-type="${chordDegree}"]`);
+        if (card) {
+          card.classList.add('key-active');
+          // Remove active class on keyup
+          setTimeout(() => {
+            card.classList.remove('key-active');
+          }, 200); // Short visual pop for key press
+        }
+
+        // Record context loop
+        if (isRecording) {
+          recordedEvents.push({
+            type: 'chord',
+            value: chordDegree,
+            timestamp: performance.now() - recordStartTime
+          });
+        }
+        return; // Stop here, don't check piano keys
+      }
+
+      // 2. Check for Piano Keys
+      const keyStr = e.key.toLowerCase();
+      const targetNote = keyMap[keyStr];
+      if (targetNote) {
+        const element = document.getElementById(`key-${targetNote.id}`);
+        if (element) {
+          initAudio();
+          triggerNoteOn(element, targetNote.id, targetNote.step);
+          keysCurrentlyPressed[keyStr] = true;
+        }
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      const keyStr = e.key.toLowerCase();
+      
+      // Clean up chord keys
+      if (chordKeyMap[keyStr]) {
+        const chordDegree = chordKeyMap[keyStr];
+        triggerChordOff(chordDegree);
+        return;
+      }
+
+      // Clean up piano keys
+      const targetNote = keyMap[keyStr];
+      if (targetNote && keysCurrentlyPressed[keyStr]) {
+        const element = document.getElementById(`key-${targetNote.id}`);
+        if (element) {
+          triggerNoteOff(element, targetNote.id);
+          delete keysCurrentlyPressed[keyStr];
+        }
+      }
+    });
+
+    // --- GEMINI API INTEGRATION & BACKOFF CONFIG ---
+    const apiKey = ""; 
+
+    async function generateAISoundscape(userPrompt) {
+      const aiBtn = document.getElementById('ai-gen-btn');
+      const aiInsight = document.getElementById('ai-insight-text');
+      const aiPanel = document.getElementById('ai-panel');
+
+      // visual states setting
+      aiBtn.disabled = true;
+      aiBtn.innerText = "✨ Processing Soundscape...";
+      aiPanel.classList.add('ai-loading');
+      aiInsight.innerText = "Analyzing mood frequencies, choosing synth voices, and programming looper...";
+
+      const systemPrompt = `You are an expert retro-synth sound designer and composer. 
+Generate a beautifully evocative, timed musical sequence structure matching the user's mood.
+You must construct and output ONLY a structured JSON response corresponding to the schema requirements.
+Loop elements must contain timed entries where the sum duration of the loop is up to 8000 milliseconds (8.0 seconds total loop).
+Choose appropriate instruments, scales, and write sequential note or chord events.
+Provide a concise, poetic music theory explanation (max 150 characters) explaining why your preset configuration matches their described vibe.`;
+
+      const requestPayload = {
+        contents: [{
+          parts: [{
+            text: `Please design a soundscape loop for the mood: "${userPrompt}". 
+Limit the loop to 8000 milliseconds max. Play chords at structural points (e.g., 0ms, 2000ms, 4000ms, 6000ms) and optionally scatter single melody note elements between them for highly musical results.`
+          }]
+        }],
+        systemInstruction: {
+          parts: [{ text: systemPrompt }]
+        },
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              scale: { type: "STRING", enum: ["C", "D", "E", "F", "G", "A", "B"] },
+              instrument: { type: "STRING", enum: ["piano", "guitar", "organ", "strings", "brass", "wind", "sine", "triangle", "sawtooth", "square"] },
+              chordOctave: { type: "INTEGER", enum: [-1, 0, 1] },
+              keyboardOctave: { type: "INTEGER", enum: [3, 4, 5, 6] },
+              explanation: { type: "STRING" },
+              loopEvents: {
+                type: "ARRAY",
+                items: {
+                  type: "OBJECT",
+                  properties: {
+                    type: { type: "STRING", enum: ["chord", "note"] },
+                    value: { type: "STRING" }, // If 'chord', must be one of: "I", "ii", "iii", "IV", "V", "vi". If 'note', must be one of: "C", "D", "E", "F", "G", "A", "B", "C_high" etc.
+                    step: { type: "INTEGER" }, // Required only if 'note'
+                    timestamp: { type: "INTEGER" } // Timestamp offset in milliseconds (0 to 8000)
+                  },
+                  required: ["type", "value", "timestamp"]
+                }
+              }
+            },
+            required: ["scale", "instrument", "chordOctave", "keyboardOctave", "explanation", "loopEvents"]
+          }
+        }
+      };
+
+      // Implement strict exponential backoff as instructed
+      let retries = 5;
+      let delay = 1000;
+      let success = false;
+      let apiResult = null;
+
+      for (let attempt = 0; attempt < retries; attempt++) {
+        try {
+          // Pointing to the preview model environment endpoint
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestPayload)
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP Error Status: ${response.status}`);
+          }
+
+          const rawData = await response.json();
+          // Correct optional chaining syntax errors from old version
+          const responseText = rawData.candidates?.[0]?.content?.parts?.[0]?.text;
+          
+          if (responseText) {
+            apiResult = JSON.parse(responseText);
+            success = true;
+            break;
+          } else {
+            throw new Error("Empty candidate result parts returned");
+          }
+        } catch (error) {
+          if (attempt === retries - 1) {
+            // Friendly error message display
+            aiInsight.innerText = "⚠️ Synthesizer signal lost! Please check your network connection and try again.";
+            aiBtn.disabled = false;
+            aiBtn.innerText = "✨ Retry AI Soundscape";
+            aiPanel.classList.remove('ai-loading');
+            return;
+          }
+          // Wait exponential period: 1s, 2s, 4s, 8s, 16s...
+          await new Promise(resolve => setTimeout(resolve, delay));
+          delay *= 2;
+        }
+      }
+
+      if (success && apiResult) {
+        // Apply AI selections to state parameters
+        scale = apiResult.scale;
+        instrument = apiResult.instrument;
+        chordOctaveOffset = apiResult.chordOctave;
+        currentOctave = apiResult.keyboardOctave;
+
+        // Sync visual UI elements
+        document.getElementById('scale-select').value = scale;
+        document.getElementById('inst-select').value = instrument;
+        
+        const chordLabels = { '-1': 'Low Bass', '0': 'Normal', '1': 'High Treb' };
+        document.getElementById('oct-display').innerText = chordLabels[chordOctaveOffset];
+        document.getElementById('kb-oct-display').innerText = `OCT: ${currentOctave}`;
+
+        updateChordInterface();
+
+        // Populate looper
+        recordedEvents = apiResult.loopEvents.map(evt => {
+          const formattedEvent = {
+            type: evt.type,
+            value: evt.value,
+            timestamp: evt.timestamp
+          };
+          if (evt.type === 'note') {
+            formattedEvent.step = typeof evt.step !== 'undefined' ? evt.step : 0;
+          }
+          return formattedEvent;
+        });
+
+        // Set duration of constructed loop to max timestamp + safety offset, clamped nicely
+        const maxTimestamp = Math.max(...apiResult.loopEvents.map(e => e.timestamp), 0);
+        loopDuration = maxTimestamp > 0 ? maxTimestamp + 1500 : 8000;
+        if (loopDuration > 16000) loopDuration = 16000; // safety ceiling
+
+        // Update loop timer text display
+        document.getElementById('loop-timer').innerText = `${(loopDuration/1000).toFixed(2)}s AI Loop`;
+        
+        // Unlock and fire immediate loop playback to amaze user!
+        document.getElementById('play-btn').disabled = false;
+        document.getElementById('play-btn').classList.remove('opacity-40', 'cursor-not-allowed');
+        
+        // Play constructed loops immediately
+        playLoop();
+
+        // Update Insight UI text block
+        aiInsight.innerText = `✨ AI Insight: ${apiResult.explanation}`;
+        aiBtn.disabled = false;
+        aiBtn.innerText = "✨ Generate AI Soundscape";
+        aiPanel.classList.remove('ai-loading');
+      }
+    }
+
+    // --- SMART MOBILE SCREEN DETECTION AND RE-ORIENTATION ---
+    let mobileViewFocused = false;
+
+    function checkScreenOrientation() {
+      const isPortrait = window.innerHeight > window.innerWidth;
+      const isSmallScreen = window.innerWidth < 1024;
+      const portraitAlert = document.getElementById('portrait-alert');
+      
+      if (isPortrait && isSmallScreen) {
+        portraitAlert.classList.remove('hidden');
+      } else {
+        portraitAlert.classList.add('hidden');
+      }
+    }
+
+    function toggleControlsGroup(forceFocusKeyboard = null) {
+      const group = document.getElementById('controls-panel-group');
+      const toggleBtnText = document.getElementById('panels-toggle-text');
+      const toggleBtnIcon = document.getElementById('panels-toggle-icon');
+
+      if (forceFocusKeyboard !== null) {
+        mobileViewFocused = forceFocusKeyboard;
+      } else {
+        mobileViewFocused = !mobileViewFocused;
+      }
+
+      if (mobileViewFocused) {
+        // Collapse top panel group to make the piano full screen height
+        group.classList.add('max-h-0', 'scale-y-0', 'opacity-0');
+        group.classList.remove('max-h-[1000px]', 'scale-y-100', 'opacity-100');
+        toggleBtnText.innerText = "Show Workspace";
+        toggleBtnIcon.innerText = "🎚️";
+      } else {
+        // Expand panels normally
+        group.classList.remove('max-h-0', 'scale-y-0', 'opacity-0');
+        group.classList.add('max-h-[1000px]', 'scale-y-100', 'opacity-100');
+        toggleBtnText.innerText = "Focus Keyboard";
+        toggleBtnIcon.innerText = "🎛️";
+      }
+      
+      // Give the layout a tick to animate, then re-render/size the piano key bed
+      setTimeout(renderKeys, 310);
+    }
+
+    // --- INITIALIZE APPLICATION & BIND ACTIONS ---
+    document.addEventListener('DOMContentLoaded', () => {
+      // Direct immediate keyboard render
+      renderKeys();
+      updateChordInterface();
+      checkScreenOrientation();
+
+      // Detect orientation shifts and resizes
+      window.addEventListener('resize', () => {
+        renderKeys();
+        checkScreenOrientation();
+      });
+      window.addEventListener('orientationchange', () => {
+        setTimeout(() => {
+          renderKeys();
+          checkScreenOrientation();
+        }, 300);
+      });
+
+      // Mobile Panel Toggle actions
+      document.getElementById('toggle-panels-btn').addEventListener('click', () => {
+        toggleControlsGroup();
+      });
+
+      document.getElementById('quick-focus-btn').addEventListener('click', () => {
+        toggleControlsGroup(true);
+        document.getElementById('portrait-alert').classList.add('hidden');
+      });
+
+      document.getElementById('dismiss-portrait-alert').addEventListener('click', () => {
+        document.getElementById('portrait-alert').classList.add('hidden');
+      });
+
+      // AI Input Event triggers
+      document.getElementById('ai-gen-btn').addEventListener('click', () => {
+        const query = document.getElementById('ai-mood-input').value.trim();
+        if (query.length > 0) {
+          generateAISoundscape(query);
+        } else {
+          document.getElementById('ai-insight-text').innerText = "⚠️ Please type a mood or genre description first!";
+        }
+      });
+
+      // Chord Pad Interactions
+      document.querySelectorAll('.chord-card').forEach(card => {
+        const degreeKey = card.getAttribute('data-chord-type');
+
+        // Mouse behaviors
+        card.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          card.classList.add('key-active');
+          triggerChordOn(degreeKey);
+        });
+        card.addEventListener('mouseup', () => {
+          card.classList.remove('key-active');
+          triggerChordOff(degreeKey);
+        });
+        card.addEventListener('mouseleave', () => {
+          card.classList.remove('key-active');
+          triggerChordOff(degreeKey);
+        });
+
+        // Touch mobile gestures
+        card.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          card.classList.add('key-active');
+          triggerChordOn(degreeKey);
+        });
+        card.addEventListener('touchend', (e) => {
+          e.preventDefault();
+          card.classList.remove('key-active');
+          triggerChordOff(degreeKey);
+        });
+      });
+
+      // Transposition Scale Changes
+      document.getElementById('scale-select').addEventListener('change', (e) => {
+        scale = e.target.value;
+        updateChordInterface();
+      });
+
+      // Preset Instrument Selector
+      document.getElementById('inst-select').addEventListener('change', (e) => {
+        instrument = e.target.value;
+      });
+
+      // Volume slider adjusts gain values
+      document.getElementById('volume-slider').addEventListener('input', (e) => {
+        volume = parseFloat(e.target.value);
+        if (mainGain) {
+          mainGain.gain.setValueAtTime(volume, audioCtx.currentTime);
+        }
+      });
+
+      // Octave registers shifting
+      document.getElementById('oct-down').addEventListener('click', () => {
+        if (chordOctaveOffset > -1) {
+          chordOctaveOffset--;
+          updateOctaveLabels();
+        }
+      });
+      document.getElementById('oct-up').addEventListener('click', () => {
+        if (chordOctaveOffset < 1) {
+          chordOctaveOffset++;
+          updateOctaveLabels();
+        }
+      });
+
+      document.getElementById('kb-oct-down').addEventListener('click', () => {
+        if (currentOctave > 1) {
+          currentOctave--;
+          updateOctaveLabels();
+        }
+      });
+      document.getElementById('kb-oct-up').addEventListener('click', () => {
+        if (currentOctave < 7) {
+          currentOctave++;
+          updateOctaveLabels();
+        }
+      });
+
+      function updateOctaveLabels() {
+        const chordLabels = { '-1': 'Low Bass', '0': 'Normal', '1': 'High Treb' };
+        document.getElementById('oct-display').innerText = chordLabels[chordOctaveOffset];
+        document.getElementById('kb-oct-display').innerText = `OCT: ${currentOctave}`;
+      }
+
+      // Recorder / Looper operations
+      document.getElementById('rec-btn').addEventListener('click', () => {
+        if (!isRecording) {
+          startRecording();
+        } else {
+          stopRecording();
+        }
+      });
+
+      document.getElementById('play-btn').addEventListener('click', () => {
+        playLoop();
+      });
+
+      document.getElementById('stop-btn').addEventListener('click', () => {
+        stopRecording();
+        stopPlayback();
+      });
+
+      // Dialogue / Modal Interactions
+      const infoBtn = document.getElementById('info-btn');
+      const infoModal = document.getElementById('info-modal');
+      const closeInfoBtn = document.getElementById('close-info-btn');
+      const dismissModalBtn = document.getElementById('dismiss-modal-btn');
+
+      const toggleModal = (show) => {
+        if (show) {
+          infoModal.classList.remove('hidden');
+          setTimeout(() => infoModal.firstElementChild.classList.remove('scale-95'), 10);
+        } else {
+          infoModal.firstElementChild.classList.add('scale-95');
+          setTimeout(() => infoModal.classList.add('hidden'), 150);
+        }
+      };
+
+      infoBtn.addEventListener('click', () => toggleModal(true));
+      closeInfoBtn.addEventListener('click', () => toggleModal(false));
+      dismissModalBtn.addEventListener('click', () => {
+        toggleModal(false);
+        initAudio(); // Warm-up AudioContext immediately
+      });
+    });
+  </script>
+</body>
+</html>
