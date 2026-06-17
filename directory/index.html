@@ -545,17 +545,14 @@
                     body: JSON.stringify(payload)
                 });
 
+                if (result.result === "success") {
                 // Since 'no-cors' opaque responses cannot be read by JS, 
                 // we assume success if the fetch promise didn't throw a hard network error.
                 showToast("Message sent successfully! We will get back to you soon.", "success");
                 form.reset();
 
                 const result = await response.json();
-
-                if (result.result === "success") {
-                    // Success response UI update
-                    showToast("Message sent successfully! We will get back to you soon.", "success");
-                    form.reset();
+                
                 } else {
                     // Error response returned by script
                     console.error("API error:", result.message);
