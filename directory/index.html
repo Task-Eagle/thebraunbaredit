@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Braun Bar Edit | Directory</title>
+    
+    <!-- Google Fonts: Raleway -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for beautiful brand icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* CSS Custom Properties & Theming */
+        :root {
+            /* Light Mode Default Theme Colors */
+            --primary-color: #8A5E39;
+            --secondary-color: #D9A876;
+            --accent-color: #f5efe6;
+            --dark-text: #463f2f;
+            --light-bg: #FFFFFF;
+            --card-bg: #FAF6F0;
+            --input-bg: #FFFFFF;
+            --border-color: #E6DFD5;
+            
+            --font-stack: 'Raleway', sans-serif;
+            --focus-outline: 3px solid #E76F51;
+            --transition-speed: 0.3s;
+        }
+
+        /* Automatic Dark Mode Toggle based on System Settings */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary-color: #D9A876; /* Swap to lighter color for better dark-mode contrast */
+                --secondary-color: #8A5E39;
+                --accent-color: #2D271E; /* Deep warm charcoal/brown background */
+                --dark-text: #F5EFE6; /* Off-white text */
+                --light-bg: #1C1914; /* Warm dark canvas background */
+                --card-bg: #262119; /* Slightly lighter card element background */
+                --input-bg: #332B21;
+                --border-color: #42382B;
+            }
+        }
+
+        /* Reset & Base Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2.5rem 1.25rem;
+            transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+            line-height: 1.6;
+        }
+
+        /* Main Container */
+        .container {
+            width: 100%;
+            max-width: 580px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* Profile Section */
+        .profile {
+            margin-bottom: 2rem;
+        }
+
+        /* Elegant Monogram Avatar fallback, or image if uploaded later */
+        .avatar-container {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            margin: 0 auto 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--light-bg);
+            font-weight: 300;
+            font-size: 2.5rem;
+            letter-spacing: -2px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 3px solid var(--accent-color);
+            transition: transform var(--transition-speed) ease;
+        }
+        
+        .avatar-container img {
+            height: 100px; 
+            width: auto;
+            display: block;
+        }
+
+        .avatar-container:hover {
+            transform: scale(1.03);
+        }
+
+        .profile h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile p {
+            font-size: 0.95rem;
+            font-weight: 400;
+            opacity: 0.85;
+            letter-spacing: 0.3px;
+        }
+
+        /* Link Directory Buttons */
+        .links-wrapper {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .btn-link {
+            width: 100%;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--dark-text);
+            text-decoration: none;
+            padding: 1.1rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all var(--transition-speed) ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Button Hovers & Focus States */
+        .btn-link:hover {
+            transform: translateY(-2px);
+            background-color: var(--accent-color);
+            border-color: var(--secondary-color);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-link:focus-visible {
+            outline: var(--focus-outline);
+            outline-offset: 2px;
+        }
+
+        .btn-link:active {
+            transform: translateY(0);
+        }
+
+        /* Button Inner Content Formatting */
+        .btn-content {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            text-align: left;
+        }
+
+        /* Icon styling */
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            color: var(--primary-color);
+            border-radius: 8px;
+            background-color: rgba(138, 94, 57, 0.08);
+            transition: transform var(--transition-speed) ease;
+        }
+
+        /* Make custom website image icon fit perfectly */
+        .btn-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .btn-icon {
+                background-color: rgba(217, 168, 118, 0.12);
+            }
+        }
+
+        .btn-link:hover .btn-icon {
+            transform: scale(1.08);
+        }
+
+        /* Chevron indicator styling */
+        .chevron {
+            font-size: 0.85rem;
+            opacity: 0.5;
+            transition: transform var(--transition-speed) ease;
+        }
+
+        .btn-link:hover .chevron {
+            transform: translateX(3px);
+            opacity: 0.9;
+        }
+
+        /* Contact Us Form Card */
+        .contact-card {
+            width: 100%;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.75rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            text-align: left;
+        }
+
+        .contact-card h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .contact-card h2 i {
+            color: var(--primary-color);
+            font-size: 1.15rem;
+        }
+
+        .contact-card p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-bottom: 1.25rem;
+        }
+
+        /* Form Inputs */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.9;
+        }
+
+        .form-input {
+            width: 100%;
+            font-family: var(--font-stack);
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--dark-text);
+            padding: 0.85rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(138, 94, 57, 0.15);
+        }
+
+        .form-input:focus-visible {
+            outline: var(--focus-outline);
+        }
+
+        textarea.form-input {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Submit Button */
+        .btn-submit {
+            width: 100%;
+            font-family: var(--font-stack);
+            background-color: var(--primary-color);
+            color: var(--light-bg);
+            border: none;
+            padding: 0.9rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color var(--transition-speed) ease, transform 0.1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--secondary-color);
+            color: #FFFFFF;
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        .btn-submit:disabled {
+            background-color: var(--border-color);
+            color: var(--dark-text);
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Loading spinner animation */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Custom Success/Error Alert Notification overlay */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background-color: var(--dark-text);
+            color: var(--light-bg);
+            padding: 0.9rem 1.5rem;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease;
+            opacity: 0;
+            z-index: 100;
+        }
+
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Footer styling */
+        footer {
+            margin-top: 3.5rem;
+            font-size: 0.75rem;
+            opacity: 0.6;
+            letter-spacing: 0.3px;
+        }
+
+        /* Utility class to hide elements gracefully */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Profile Header Section -->
+        <header class="profile">
+            <div class="avatar-container">
+                <img src="website-icon.png" alt="THE BRAUNBÄR EDIT logo">
+            </div>
+            <h1>THE BRAUNBÄR EDIT</h1>
+            <p>Curated style edits, collection guides & lifestyle reviews</p>
+        </header>
+
+        <!-- Dynamic Link Directory -->
+        <main class="links-wrapper">
+
+            <!-- 1. eBay Store -->
+            <a href="https://www.ebay.com/str/thebraunbaredit" class="btn-link" target="_blank" rel="noopener">
+                <span class="btn-content">
+                    <span class="btn-icon">
+                        <i class="fa-brands fa-ebay"></i>
+                    </span>
+                    <span>Shop our eBay Store</span>
+                </span>
+                <span class="chevron" aria-hidden="true">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </span>
+            </a>
+
+            <!-- 2. YouTube Channel -->
+            <a href="https://www.youtube.com/@thebraunbaredit" class="btn-link" target="_blank" rel="noopener">
+                <span class="btn-content">
+                    <span class="btn-icon">
+                        <i class="fa-brands fa-youtube" style="color: #FF0000;"></i>
+                    </span>
+                    <span>Watch on YouTube</span>
+                </span>
+                <span class="chevron" aria-hidden="true">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </span>
+            </a>
+
+            <!-- 3. Main Website Link -->
+            <a href="../index.html" class="btn-link">
+                <span class="btn-content">
+                    <span class="btn-icon">
+                        <!-- Custom local icon check with beautiful dynamic SVG fallback if image is missing -->
+                        <img id="webIconImg" src="website-icon.png" alt="Website Logo" onerror="handleImageError(this)">
+                        <i id="webIconFallback" class="fa-solid fa-globe hidden"></i>
+                    </span>
+                    <span>Explore Our Website</span>
+                </span>
+                <span class="chevron" aria-hidden="true">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </span>
+            </a>
+
+        </main>
+
+        <!-- Contact Us Section -->
+        <section class="contact-card">
+            <h2><i class="fa-regular fa-envelope"></i> Contact Us</h2>
+            <p>Have questions or feedback? Send us a message directly from here and we will get back to you!</p>
+            
+            <form id="contactForm" onsubmit="handleContactSubmit(event)">
+                <div class="form-group">
+                    <label for="userEmail">Your Email Address</label>
+                    <input type="email" id="userEmail" class="form-input" placeholder="name@example.com" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="userMessage">Your Question or Feedback</label>
+                    <textarea id="userMessage" class="form-input" placeholder="Type your message here..." required></textarea>
+                </div>
+                <button type="submit" id="submitBtn" class="btn-submit">
+                    <span id="submitBtnText">Send Message</span> 
+                    <span id="submitBtnIcon"><i class="fa-regular fa-paper-plane"></i></span>
+                </button>
+            </form>
+        </section>
+
+        <!-- Elegant Footer -->
+        <footer>
+            &copy; <span id="currentYear"></span> THE BRAUNBÄR EDIT. All rights reserved.
+        </footer>
+    </div>
+
+    <!-- Notification Prompt Overlay -->
+    <div id="toastNotification" class="notification">
+        <span id="toastIcon"><i class="fa-solid fa-check-circle" style="color: var(--primary-color);"></i></span>
+        <span id="toastMessage">Processing your request...</span>
+    </div>
+
+    <script>
+        // Set dynamic footer copyright year
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        /**
+         * Image Fallback Script:
+         * If website-icon.png doesn't exist locally, hide the <img> element
+         * and show a clean FontAwesome Globe fallback instead.
+         */
+        function handleImageError(img) {
+            img.classList.add('hidden');
+            const fallbackIcon = document.getElementById('webIconFallback');
+            if (fallbackIcon) {
+                fallbackIcon.classList.remove('hidden');
+            }
+        }
+
+        /**
+         * Google Apps Script Endpoint URL Configuration:
+         * Paste your deployed Google Apps Script URL here.
+         */
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzft9abGa26O47-_S2wnApxzybngbGHTghGRq7tCC_s41AYDAjS4SjrS4RTsjt3nXG8/exec";
+
+        /**
+         * Handle Contact Submission using fetch API and Google Apps Script Backend
+         */
+        async function handleContactSubmit(e) {
+            e.preventDefault();
+            
+            const form = document.getElementById('contactForm');
+            const emailInput = document.getElementById('userEmail');
+            const messageInput = document.getElementById('userMessage');
+            const submitBtn = document.getElementById('submitBtn');
+            const submitBtnText = document.getElementById('submitBtnText');
+            const submitBtnIcon = document.getElementById('submitBtnIcon');
+            const toast = document.getElementById('toastNotification');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastMessage = document.getElementById('toastMessage');
+
+            // 1. Check if SCRIPT_URL has been configured
+            if (SCRIPT_URL === "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE" || SCRIPT_URL === "") {
+                showToast("Configuration missing. Please set up your Apps Script URL.", "error");
+                return;
+            }
+
+            const payload = {
+                email: emailInput.value.trim(),
+                message: messageInput.value.trim()
+            };
+
+            // 2. Set UI Elements to Loading State
+            submitBtn.disabled = true;
+            emailInput.disabled = true;
+            messageInput.disabled = true;
+            submitBtnText.textContent = "Sending...";
+            submitBtnIcon.innerHTML = `<span class="spinner"></span>`;
+
+            try {
+                // 3. Make POST Request to Google Apps Script
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    cache: 'no-cache',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8', // Bypass preflight limits in Google Apps Script
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.result === "success") {
+                    // Success response UI update
+                    showToast("Message sent successfully! We will get back to you soon.", "success");
+                    form.reset();
+                } else {
+                    // Error response returned by script
+                    console.error("API error:", result.message);
+                    showToast("Oops! We couldn't send your message. Please try again.", "error");
+                }
+            } catch (error) {
+                // Network, CORS, or connection failures
+                console.error("Submission failed:", error);
+                showToast("Failed to connect. Please check your network connection.", "error");
+            } finally {
+                // 4. Restore UI Form Elements to default state
+                submitBtn.disabled = false;
+                emailInput.disabled = false;
+                messageInput.disabled = false;
+                submitBtnText.textContent = "Send Message";
+                submitBtnIcon.innerHTML = `<i class="fa-regular fa-paper-plane"></i>`;
+            }
+        }
+
+        /**
+         * Dynamic Toast Notification Handler
+         */
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toastNotification');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastMessage = document.getElementById('toastMessage');
+
+            // Format Toast based on outcome type
+            if (type === "success") {
+                toastIcon.innerHTML = `<i class="fa-solid fa-check-circle" style="color: #4CAF50;"></i>`;
+            } else if (type === "error") {
+                toastIcon.innerHTML = `<i class="fa-solid fa-circle-exclamation" style="color: #FF5722;"></i>`;
+            } else {
+                toastIcon.innerHTML = `<i class="fa-solid fa-circle-info" style="color: var(--primary-color);"></i>`;
+            }
+
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+
+            // Clear toast automatically after 5 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
