@@ -228,7 +228,7 @@
             <span class="text-[9px] uppercase tracking-wider text-wood-500 font-bold mb-1">Piano Octave</span>
             <div class="flex gap-1 bg-wood-950 rounded-lg p-0.5 border border-wood-800">
               <button id="kb-oct-down" class="px-2 py-1 bg-wood-800 hover:bg-wood-700 active:bg-wood-600 rounded text-xs font-black transition-all">-</button>
-              <span id="kb-oct-display" class="flex-1 text-[10px] font-mono font-bold text-wood-300 text-center flex items-center justify-center">OCT: 4</span>
+                            <span id="kb-oct-display" class="flex-1 text-[10px] font-mono font-bold text-wood-300 text-center flex items-center justify-center">OCT: 4</span>
               <button id="kb-oct-up" class="px-2 py-1 bg-wood-800 hover:bg-wood-700 active:bg-wood-600 rounded text-xs font-black transition-all">+</button>
             </div>
           </div>
@@ -326,7 +326,7 @@
           <h2 class="text-xs uppercase tracking-widest text-amber-300 font-bold flex items-center gap-1">
             ✨ AI Musicologist
           </h2>
-          <span class="text-[8px] bg-amber-950 text-amber-400 px-1.5 py-0.5 rounded font-black uppercase tracking-wider border border-amber-900">Gemini 2.5</span>
+          <span class="text-[8px] bg-amber-950 text-amber-400 px-1.5 py-0.5 rounded font-black uppercase tracking-wider border border-amber-900">Gemini 2.0</span>
         </div>
 
         <!-- Description Input -->
@@ -403,8 +403,8 @@
         <!-- Mediant Minor Chord (iii) -->
         <button data-chord-type="iii" class="chord-card relative flex flex-col justify-between p-3 bg-wood-850 hover:bg-wood-800 border-2 border-wood-750 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer">
           <div class="flex justify-between items-start w-full">
-            <span class="text-[9px] font-mono font-extrabold px-1.5 py-0.5 rounded bg-wood-950 text-wood-500 border border-wood-850">iii</span>
-            <span class="text-[9px] text-wood-400 uppercase tracking-wider font-semibold">Minor</span>
+            <span class="text-[9px] font-mono font-extrabold px-1.5 py-0.5 rounded bg-wood-950 text-wood-500 border border-wood-850">ii</span>
+                          <span class="text-[9px] text-wood-400 uppercase tracking-wider font-semibold">Minor</span>
           </div>
           <span class="chord-name text-2xl md:text-3xl font-black text-wood-100 my-1">Em</span>
           <span class="chord-notes text-[9px] font-mono text-wood-400 tracking-wider">E - G - B</span>
@@ -437,7 +437,7 @@
 
   <!-- QUICK TIPS AND BOTTOM STATUS INFO -->
   <footer class="bg-wood-950 border-t border-wood-900 p-2 text-[10px] text-wood-500 flex justify-between items-center shrink-0">
-    <span class="flex items-center gap-1">🎹 Playguide: <b>QWERTY Keys [A S D F G H J K L ; ']</b> bound to white notes</span>
+    <span class="flex items-center gap-1">🎹 Playguide: <b>QWERTY Keys [A S D F G H J K L ; ']</b> bound to white notes, [Z X C V B N] for chords</span>
     <span class="hidden md:inline">⚡ Optimized for multi-touch, swipes, and high polyphony synthesizers</span>
     <span>Acoustic Engine v3.0</span>
   </footer>
@@ -476,8 +476,12 @@
               White Keys (C to F')
             </div>
             <div class="bg-wood-950 p-1.5 rounded border border-wood-800">
-              <span class="text-amber-400 font-bold block">W E   T Y U   O P</span>
+              <span class="text-amber-400 font-bold block">W E &nbsp; T Y U &nbsp; O P</span>
               Black Keys
+            </div>
+            <div class="bg-wood-950 p-1.5 rounded border border-wood-800 col-span-2 mt-1">
+              <span class="text-emerald-400 font-bold block">Z X C V B N</span>
+              Chord Pads (I, IV, V, vi, ii, iii)
             </div>
           </div>
         </div>
@@ -653,7 +657,7 @@
         if (!keyNoteId) return;
 
         // Clean name (e.g., 'C_high' to 'C')
-        const baseNoteName = keyNoteId.split('_')[0];
+        const baseNoteName = keyNoteId.split('_');
         
         if (chordNotes.includes(baseNoteName)) {
           if (isPressed) {
@@ -665,7 +669,7 @@
       });
     }
 
-    // --- SYNCHRONIZED HARMONIC SOUND PIPELINES ---
+        // --- SYNCHRONIZED HARMONIC SOUND PIPELINES ---
     function playHarmonicTone(freq, isChord, noteIdentifierKey) {
       initAudio();
       if (audioCtx.state === 'suspended') {
@@ -1288,8 +1292,58 @@
     // Computer QWERTY key tracker
     const keysCurrentlyPressed = {};
 
+    // Map for Chord Pads (Z, X, C, V, B, N)
+    const chordKeyMap = {
+      'z': 'I',
+      'x': 'IV',
+      'c': 'V',
+      'v': 'vi',
+      'b': 'ii',
+      'n': 'iii'
+    };
+
     window.addEventListener('keydown', (e) => {
       if (e.repeat) return;
+      
+      // 1. Check for Chord Pads (Z, X, C, V, B, N)
+      const chordKey = e.key.toLowerCase();
+      const chordDegree = chordKeyMap[chordKey];
+      
+      if (chordDegree) {
+        e.preventDefault(); // Prevent default browser actions
+        initAudio();
+        
+        // Trigger Audio
+        triggerChordOn(chordDegree);
+        
+        // Visual Feedback: Find the corresponding card and add active class
+        const card = document.querySelector(`.chord-card[data-chord-type="${chordDegree}"]`);
+        if (card) {
+          card.classList.add('key-active');
+          // Remove active class on keyup
+          setTimeout(() => {
+            card.classList.remove('key-active');
+          }, 200); // Short visual pop for key press
+        }
+
+        // Record context loop
+        if (isRecording) {
+          recordedEvents.push({
+            type: 'chord',
+            value: chordDegree,
+            timestamp: performance.now() - recordStartTime
+          });
+        }
+        
+        // Update display
+        document.getElementById('playing-notes').innerHTML = `
+          <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+          <span class="text-amber-200 font-bold">Chord Active: ${getChordName(chordDegree)} (${getChordLiteralNotes(chordDegree)})</span>
+        `;
+        return; // Stop here, don't check piano keys
+      }
+
+      // 2. Check for Piano Keys
       const keyStr = e.key.toLowerCase();
       const targetNote = keyMap[keyStr];
       if (targetNote) {
@@ -1304,6 +1358,15 @@
 
     window.addEventListener('keyup', (e) => {
       const keyStr = e.key.toLowerCase();
+      
+      // Clean up chord keys
+      if (chordKeyMap[keyStr]) {
+        const chordDegree = chordKeyMap[keyStr];
+        triggerChordOff(chordDegree);
+        return;
+      }
+
+      // Clean up piano keys
       const targetNote = keyMap[keyStr];
       if (targetNote && keysCurrentlyPressed[keyStr]) {
         const element = document.getElementById(`key-${targetNote.id}`);
@@ -1315,7 +1378,8 @@
     });
 
     // --- GEMINI API INTEGRATION & EXPAT RETRY CONFIG ---
-    const apiKey = "AQ.Ab8RN6KbedT47ZrLMNWvVGEC3bGZkVvIPyP8P33ZgLZ7e2oVzw"; // Left empty as required; provided dynamically at runtime
+    // REPLACE THIS WITH YOUR ACTUAL API KEY
+    const apiKey = "AQ.Ab8RN6KbedT47ZrLMNWvVGEC3bGZkVvIPyP8P33ZgLZ7e2oVzw"; 
 
     async function generateAISoundscape(userPrompt) {
       const aiBtn = document.getElementById('ai-gen-btn');
@@ -1382,7 +1446,8 @@ Limit the loop to 8000 milliseconds max. Play chords at structural points (e.g.,
 
       for (let attempt = 0; attempt < retries; attempt++) {
         try {
-         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+          // UPDATED MODEL: gemini-2.0-flash instead of 2.5-preview
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
           const response = await fetch(endpoint, {
             method: "POST",
             headers: {
@@ -1396,7 +1461,7 @@ Limit the loop to 8000 milliseconds max. Play chords at structural points (e.g.,
           }
 
           const rawData = await response.json();
-          const responseText = rawData.candidates?.[0]?.content?.parts?.[0]?.text;
+          const responseText = rawData.candidates?.?.content?.parts?.?.text;
           
           if (responseText) {
             apiResult = JSON.parse(responseText);
@@ -1465,7 +1530,7 @@ Limit the loop to 8000 milliseconds max. Play chords at structural points (e.g.,
         // Play constructed loops immediately
         playLoop();
 
-        // Update Insight UI text block
+                // Update Insight UI text block
         aiInsight.innerText = `✨ AI Insight: ${apiResult.explanation}`;
         aiBtn.disabled = false;
         aiBtn.innerText = "✨ Generate AI Soundscape";
