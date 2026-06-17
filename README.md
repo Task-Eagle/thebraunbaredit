@@ -1,4 +1,4 @@
-# Hover on Image zoom, Clean Storefron UI, filters for searching, Search bar. Please edit using Phoenix code on Linux. v2.0.1
+# Hover on Image zoom, Clean Storefront UI, filters for searching, Search bar. Please edit using Phoenix code on Linux. v2.0.1
 <!DOCTYPE html>
 <!-- saved from url=(0058)https://chatgpt.com/c/69eae6c5-8d94-83ea-a7ae-e7580a772541 -->
 <html lang="en-US" data-build="prod-81e0c5cdf6140e8c5db714d613337f4aeab94029" data-seq="6128297" data-contrast="high" dir="ltr" class="wizmage-show-html wizmage-running light" data-chat-theme="yellow" style="color-scheme: light;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><style>.ͼ5 {background-color: var(--gray-0); color: var(--gray-950);}
