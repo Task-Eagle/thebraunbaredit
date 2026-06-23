@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BRAUNBÄR - Dashboard -</title>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#8a5e39">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="BRAUNBÄR">
+<link rel="apple-touch-icon" href="icon-192.png">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -67,6 +74,18 @@
         }
     </style>
 </head>
+    <script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", async () => {
+    try {
+      await navigator.serviceWorker.register("./sw.js");
+      console.log("BRAUNBÄR PWA ready");
+    } catch (err) {
+      console.error("SW registration failed:", err);
+    }
+  });
+}
+</script>
 <body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 min-h-screen flex flex-col md:flex-row">
 
     <!-- Toast Notification System -->
